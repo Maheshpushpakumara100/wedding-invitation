@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guest Link Manager · Dhananjani &amp; Mahesh</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#f7f0e3" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="assets/admin.css" />
+</head>
+<body class="admin-page">
+
+  <div class="admin-shell">
+
+    <!-- PASSCODE GATE -->
+    <div class="admin-gate" id="gate">
+      <div class="gate-card">
+        <p class="eyebrow">Private area</p>
+        <h1 class="gate-title">Guest Link Manager</h1>
+        <p class="gate-text">Enter the admin passcode to manage the guest list and generate personal invitation links.</p>
+        <form id="gateForm" class="gate-form">
+          <input type="password" id="gatePass" placeholder="Passcode" autocomplete="current-password" required />
+          <button class="btn-solid" type="submit">Enter</button>
+        </form>
+        <p class="gate-error" id="gateError"></p>
+        <p class="gate-note">Default passcode: <strong>D&amp;M2026</strong> — change it in <code>assets/admin.js</code>.</p>
+      </div>
+    </div>
+
+    <!-- ADMIN APP -->
+    <div class="admin-app" id="app" hidden>
+
+      <header class="admin-head">
+        <div>
+          <p class="eyebrow">Dhananjani &amp; Mahesh</p>
+          <h1 class="admin-title">Guest Link Manager</h1>
+        </div>
+        <a class="btn-outline small" href="index.html" target="_blank" rel="noopener">View Invitation</a>
+      </header>
+
+      <section class="panel">
+        <h2 class="panel-title">Site link</h2>
+        <p class="panel-help">Paste your live GitHub Pages address. Every guest link is built from this URL.</p>
+        <div class="row">
+          <input type="url" id="baseUrl" class="text-input" placeholder="https://username.github.io/wedding/" />
+          <button class="btn-outline small" id="saveBase" type="button">Save</button>
+        </div>
+        <p class="hint" id="baseSaved"></p>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title" id="formTitle">Add a guest</h2>
+        <form id="guestForm" class="guest-form" novalidate>
+          <div class="grid-2">
+            <label class="field">
+              <span>Salutation</span>
+              <select id="gSalutation">
+                <option value="">—</option>
+                <option>Mr.</option>
+                <option>Mrs.</option>
+                <option>Ms.</option>
+                <option>Mr. &amp; Mrs.</option>
+                <option>Dr.</option>
+                <option>Rev.</option>
+                <option>Family of</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Name</span>
+              <input type="text" id="gName" placeholder="e.g. Silva" />
+            </label>
+            <label class="field span-2">
+              <span>Display name (as shown on the card)</span>
+              <input type="text" id="gDisplay" placeholder="e.g. Mr. &amp; Mrs. Silva" />
+            </label>
+            <label class="field">
+              <span>Phone (optional, for WhatsApp)</span>
+              <input type="text" id="gPhone" placeholder="07X XX XX XXX" />
+            </label>
+            <label class="field">
+              <span>Guest link code</span>
+              <input type="text" id="gSlug" placeholder="e.g. silva-family" />
+            </label>
+          </div>
+          <div class="row form-actions">
+            <button class="btn-solid" type="submit" id="saveGuest">Add guest</button>
+            <button class="btn-outline" type="button" id="cancelEdit" hidden>Cancel</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">Guests <span class="count-badge" id="guestCount">0</span></h2>
+          <div class="row wrap">
+            <button class="btn-outline small" id="reloadBtn" type="button">Reload guests.json</button>
+            <button class="btn-outline small" id="exportBtn" type="button">Download guests.json</button>
+            <label class="btn-outline small import-label">
+              Import JSON
+              <input type="file" id="importInput" accept="application/json" hidden />
+            </label>
+          </div>
+        </div>
+
+        <div class="publish-note">
+          After making changes, click <strong>Download guests.json</strong>, then replace
+          <code>data/guests.json</code> in your GitHub repository. The live site updates in about a minute.
+        </div>
+
+        <div class="table-wrap">
+          <table class="guest-table">
+            <thead>
+              <tr><th>Guest</th><th>Invitation link</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="guestRows"></tbody>
+          </table>
+          <p class="empty" id="emptyMsg">No guests yet. Add your first guest above.</p>
+        </div>
+      </section>
+
+      <footer class="admin-foot">
+        <p>Personal links use <code>?g=code</code>. Each guest sees their own name on the invitation.</p>
+      </footer>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dhananjani &amp; Mahesh · Wedding Invitation</title>
+  <meta name="description" content="Together with their parents, Dhananjani and Mahesh warmly request the honour of your presence to celebrate their wedding on Monday, 07 December 2026 at Tranquil Hotel, Naranwala, Waliweriya." />
+  <meta name="theme-color" content="#f7f0e3" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Great+Vibes&family=Jost:wght@300;400;500&family=Noto+Sans+Sinhala:wght@300;400;500&family=Noto+Serif+Sinhala:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+  <div id="heartRain" class="heart-rain" aria-hidden="true"></div>
+
+  <!-- LANGUAGE SWITCH -->
+  <div class="lang-switch" id="langSwitch" role="group" aria-label="Language" data-i18n-aria="langAria">
+    <button type="button" data-lang="en" class="is-active" aria-pressed="true">EN</button>
+    <button type="button" data-lang="si" aria-pressed="false">සිං</button>
+  </div>
+
+  <!-- MUSIC -->
+  <button class="music-toggle is-muted" id="musicToggle" type="button" aria-label="Play music" aria-pressed="true">
+    <svg class="music-note" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M9 17V5l10-2v12" />
+      <circle cx="6" cy="17" r="3" />
+      <circle cx="16" cy="15" r="3" />
+    </svg>
+    <span class="music-slash" aria-hidden="true"></span>
+  </button>
+
+  <!-- ============ INTRO / SEAL ============ -->
+  <div class="intro" id="intro">
+    <svg class="mandala mandala-intro" viewBox="-200 -200 400 400" aria-hidden="true"><use href="#mandala" /></svg>
+
+    <!-- ENVELOPE OPENING ANIMATION -->
+    <div class="envelope-scene" id="envelopeScene" aria-hidden="true">
+      <div class="envelope">
+        <div class="env-back"></div>
+        <div class="env-letter">
+          <span class="env-letter-brand">D&amp;M</span>
+          <svg class="env-letter-blossom" viewBox="-16 -16 32 32" aria-hidden="true">
+            <use href="#blossom" />
+          </svg>
+        </div>
+        <div class="env-front"></div>
+        <div class="env-flap"></div>
+        <div class="env-seal">
+          <span class="env-seal-ring"></span>
+          <span class="env-seal-mono">D&amp;M</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="intro-video" id="introVideo" aria-hidden="true">
+      <video id="introVideoEl" src="Videos/invitation-intro.mp4" playsinline preload="auto"></video>
+    </div>
+
+    <div class="intro-inner">
+      <div class="seal" aria-hidden="true">
+        <span class="seal-ring"></span>
+        <span class="seal-mono">D&amp;M</span>
+      </div>
+      <button class="btn-seal" id="openInvite" type="button" data-i18n="openInvite">Open Invitation</button>
+      <p class="intro-hint" data-i18n="tapSeal">Tap to break the seal</p>
+    </div>
+  </div>
+
+  <!-- ============ CARD ============ -->
+  <main class="invite" id="invite" aria-hidden="true">
+
+    <!-- HERO -->
+    <header class="hero" id="home">
+      <svg class="mandala mandala-hero" viewBox="-200 -200 400 400" aria-hidden="true"><use href="#mandala" /></svg>
+      <svg class="corner tl" viewBox="0 0 220 220" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">
+          <path d="M6 214C46 168 74 128 132 96c22-12 46-22 82-30" />
+          <path d="M62 148c-18-4-30-16-34-34" />
+          <path d="M92 124c-6-18 0-34 14-46" />
+          <path d="M132 96c-2-18 8-32 22-42" />
+          <path d="M62 148c-20 4-36-2-46-16" />
+        </g>
+        <g class="blossoms">
+          <g transform="translate(132 96)"><use href="#blossom" /></g>
+          <g transform="translate(92 124) scale(.8)"><use href="#blossom" /></g>
+          <g transform="translate(62 148) scale(.7)"><use href="#blossom" /></g>
+          <g transform="translate(16 132) scale(.55)"><use href="#blossom" /></g>
+          <g transform="translate(154 54) scale(.6)"><use href="#blossom" /></g>
+        </g>
+      </svg>
+      <svg class="corner tr" viewBox="0 0 220 220" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">
+          <path d="M6 214C46 168 74 128 132 96c22-12 46-22 82-30" />
+          <path d="M62 148c-18-4-30-16-34-34" />
+          <path d="M92 124c-6-18 0-34 14-46" />
+          <path d="M132 96c-2-18 8-32 22-42" />
+          <path d="M62 148c-20 4-36-2-46-16" />
+        </g>
+        <g class="blossoms">
+          <g transform="translate(132 96)"><use href="#blossom" /></g>
+          <g transform="translate(92 124) scale(.8)"><use href="#blossom" /></g>
+          <g transform="translate(62 148) scale(.7)"><use href="#blossom" /></g>
+          <g transform="translate(16 132) scale(.55)"><use href="#blossom" /></g>
+          <g transform="translate(154 54) scale(.6)"><use href="#blossom" /></g>
+        </g>
+      </svg>
+
+      <div class="hero-content">
+        <div class="guest-block guest-block-top">
+          <p class="guest-greeting" id="guestGreeting">Dear Guest,</p>
+        </div>
+
+        <p class="families-line" data-i18n="introTogether">Together with our families</p>
+        <p class="eyebrow" data-i18n="heroEyebrow">The Wedding Celebration of</p>
+        <h1 class="names"><span data-i18n="bride">Dhananjani</span> <span class="amp">&amp;</span> <span data-i18n="groom">Mahesh</span></h1>
+        <div class="ornament" aria-hidden="true">
+          <span class="ornament-line"></span>
+          <span class="ornament-flower">✿</span>
+          <span class="ornament-line"></span>
+        </div>
+        <p class="hero-date" data-i18n="heroDate">Monday · 07 December 2026</p>
+        <p class="hero-place" data-i18n="heroPlace">Tranquil Hotel · Naranwala, Waliweriya</p>
+        <p class="guest-line guest-line-bottom" data-i18n="guestLine">You are warmly invited to share in our joy.</p>
+
+        <a class="scroll-cue" href="#countdown" aria-label="Scroll to countdown" data-i18n-aria="scrollAria">
+          <span class="scroll-arrow"></span>
+        </a>
+      </div>
+    </header>
+
+    <nav class="nav" aria-label="Invitation sections" data-i18n-aria="navAria">
+      <a href="#home" data-i18n="navHome">Home</a>
+      <a href="#invitation" data-i18n="navInvitation">Invitation</a>
+      <a href="#details" data-i18n="navDetails">Details</a>
+      <a href="#venue" data-i18n="navVenue">Venue</a>
+      <a href="#rsvp" data-i18n="navRsvp">RSVP</a>
+    </nav>
+
+    <!-- COUNTDOWN -->
+    <section class="section countdown-section" id="countdown">
+      <p class="section-label" data-i18n="countLabel">Counting the days</p>
+      <h2 class="section-title" data-i18n="countTitle">We are getting married</h2>
+      <div class="ornament" aria-hidden="true">
+        <span class="ornament-line"></span><span class="ornament-flower">✿</span><span class="ornament-line"></span>
+      </div>
+      <div class="countdown" id="cd" aria-live="polite">
+        <div class="cd-item"><span id="days">00</span><small data-i18n="days">Days</small></div>
+        <div class="cd-item"><span id="hours">00</span><small data-i18n="hours">Hours</small></div>
+        <div class="cd-item"><span id="minutes">00</span><small data-i18n="minutes">Minutes</small></div>
+        <div class="cd-item"><span id="seconds">00</span><small data-i18n="seconds">Seconds</small></div>
+      </div>
+      <p class="countdown-note" id="countdownNote">Until Monday, 7 December 2026</p>
+    </section>
+
+    <!-- INVITATION -->
+    <section class="section invitation-section" id="invitation">
+      <div class="invite-card">
+        <p class="eyebrow" data-i18n="togetherParents">Together with their parents</p>
+        <h2 class="script-name" data-i18n="bride">Dhananjani</h2>
+        <p class="and-word">&amp;</p>
+        <h2 class="script-name" data-i18n="groom">Mahesh</h2>
+        <p class="invite-text" data-i18n-html="inviteText">warmly request the honour of your presence<br />to celebrate their wedding on</p>
+        <p class="wedding-date" data-i18n="weddingDate">Monday, 07 December 2026</p>
+        <p class="wedding-time" data-i18n="weddingTime">08.30 AM – 04.00 PM</p>
+        <p class="wedding-venue" data-i18n-html="weddingVenue">Tranquil Hotel<br />Naranwala, Waliweriya</p>
+        <p class="poruwa" data-i18n="poruwa">Poruwa ceremony at 09.48 AM</p>
+      </div>
+    </section>
+
+    <!-- DETAILS -->
+    <section class="section details-section" id="details">
+      <p class="section-label" data-i18n="detailsLabel">The Celebration</p>
+      <h2 class="section-title" data-i18n="detailsTitle">Order of the day</h2>
+      <div class="ornament" aria-hidden="true">
+        <span class="ornament-line"></span><span class="ornament-flower">✿</span><span class="ornament-line"></span>
+      </div>
+
+      <div class="detail-grid">
+        <article class="detail-card">
+          <p class="detail-kicker" data-i18n="monday">Monday</p>
+          <h3 class="detail-title" data-i18n="dateShort">07 December 2026</h3>
+          <p class="detail-text" data-i18n="detail1Text">The wedding celebration begins at 08.30 AM and continues until 04.00 PM.</p>
+        </article>
+        <article class="detail-card">
+          <p class="detail-kicker">09.48 AM</p>
+          <h3 class="detail-title" data-i18n="poruwaTitle">Poruwa Ceremony</h3>
+          <p class="detail-text" data-i18n="detail2Text">The traditional Poruwa ceremony will be held at 09.48 AM.</p>
+        </article>
+        <article class="detail-card">
+          <p class="detail-kicker" data-i18n="venueKicker">The Venue</p>
+          <h3 class="detail-title" data-i18n="venueName">Tranquil Hotel</h3>
+          <p class="detail-text" data-i18n="detail3Text">Naranwala, Waliweriya. We look forward to celebrating with you there.</p>
+        </article>
+      </div>
+
+      <div class="detail-actions">
+        <button class="btn-outline" id="addCalendar" type="button" data-i18n="addCalendar">Add to Calendar</button>
+        <a class="btn-outline" href="https://www.google.com/maps/search/?api=1&query=Tranquil%20Hotel%2C%20Naranwala%2C%20Waliweriya" target="_blank" rel="noopener" data-i18n="openMaps">Open in Maps</a>
+      </div>
+    </section>
+
+    <!-- VENUE -->
+    <section class="section venue-section" id="venue">
+      <p class="section-label" data-i18n="venueLabel">Where we celebrate</p>
+      <h2 class="section-title" data-i18n="venueTitle">The Venue</h2>
+      <div class="ornament" aria-hidden="true">
+        <span class="ornament-line"></span><span class="ornament-flower">✿</span><span class="ornament-line"></span>
+      </div>
+      <div class="venue-card">
+        <figure class="venue-figure">
+          <img src="images/tranquil_1.webp" alt="Tranquil Hotel, Naranwala, Waliweriya" width="1007" height="671" loading="lazy" decoding="async" />
+        </figure>
+        <p class="venue-kicker" data-i18n="venueKicker">Venue</p>
+        <h3 class="venue-name" data-i18n="venueName">Tranquil Hotel</h3>
+        <p class="venue-address" data-i18n="venueAddress">Naranwala, Waliweriya</p>
+        <a class="btn-outline" href="https://www.google.com/maps/search/?api=1&query=Tranquil%20Hotel%2C%20Naranwala%2C%20Waliweriya" target="_blank" rel="noopener" data-i18n="openMaps">Open in Maps</a>
+      </div>
+    </section>
+
+    <!-- RSVP -->
+    <section class="section rsvp-section" id="rsvp">
+      <p class="section-label" data-i18n="rsvpLabel">Kindly reply</p>
+      <h2 class="section-title" data-i18n="rsvpTitle">Will you join us?</h2>
+      <div class="ornament" aria-hidden="true">
+        <span class="ornament-line"></span><span class="ornament-flower">✿</span><span class="ornament-line"></span>
+      </div>
+      <p class="rsvp-intro" data-i18n="rsvpIntro">It would mean so much to have you with us. Please let us know if you can join the celebration.</p>
+
+      <form class="rsvp-form" id="rsvpForm" novalidate>
+        <label class="field">
+          <span data-i18n="yourName">Your name</span>
+          <input type="text" id="rsvpName" name="name" placeholder="Full name" autocomplete="name" required data-i18n-placeholder="fullName" />
+        </label>
+
+        <fieldset class="field radio-field">
+          <legend data-i18n="willAttend">Will you attend?</legend>
+          <label class="radio">
+            <input type="radio" name="attend" value="joyfully accept" checked />
+            <span data-i18n="joyfully">Joyfully accepts</span>
+          </label>
+          <label class="radio">
+            <input type="radio" name="attend" value="regretfully decline" />
+            <span data-i18n="regretfully">Regretfully declines</span>
+          </label>
+        </fieldset>
+
+        <label class="field">
+          <span data-i18n="numGuests">Number of guests</span>
+          <select id="rsvpCount" name="count">
+            <option>1</option><option>2</option><option>3</option><option>4</option>
+            <option>5</option><option>6</option><option>7</option><option>8</option>
+            <option>9</option><option>10</option>
+          </select>
+        </label>
+
+        <button class="btn-solid" type="submit" data-i18n="sendReply">Send reply on WhatsApp</button>
+        <p class="form-note" data-i18n="formNote">Your reply will open in WhatsApp so you can send it directly to us.</p>
+      </form>
+
+      <div class="contact-card">
+        <p class="contact-title" data-i18n="rsvpContact">RSVP &amp; Contact</p>
+        <div class="contact-grid">
+          <a class="contact" href="tel:+94717979436">
+            <span class="contact-name" data-i18n="personMahesh">Mahesh</span>
+            <span class="contact-num">071 79 79 436</span>
+          </a>
+          <a class="contact" href="tel:+94715534712">
+            <span class="contact-name" data-i18n="personDhananjani">Dhananjani</span>
+            <span class="contact-num">071 55 34 712</span>
+          </a>
+        </div>
+        <div class="contact-wa">
+          <a class="btn-outline small" href="https://wa.me/94717979436?text=Hello%20Mahesh%2C%20I%20have%20received%20your%20wedding%20invitation." target="_blank" rel="noopener" data-i18n="waMahesh">WhatsApp Mahesh</a>
+          <a class="btn-outline small" href="https://wa.me/94715534712?text=Hello%20Dhananjani%2C%20I%20have%20received%20your%20wedding%20invitation." target="_blank" rel="noopener" data-i18n="waDhananjani">WhatsApp Dhananjani</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="ornament" aria-hidden="true">
+        <span class="ornament-line"></span><span class="ornament-flower">✿</span><span class="ornament-line"></span>
+      </div>
+      <p class="footer-save" data-i18n="saveDate">Save the date</p>
+      <p class="footer-date">07 · 12 · 2026</p>
+      <p class="footer-script"><span data-i18n="bride">Dhananjani</span> &amp; <span data-i18n="groom">Mahesh</span></p>
+      <p class="footer-line" data-i18n="sealed">Sealed with love.</p>
+    </footer>
+  </main>
+
+  <!-- Reusable blossom + mandala symbols -->
+  <svg width="0" height="0" class="svg-defs" aria-hidden="true" focusable="false">
+    <defs>
+      <g id="blossom">
+        <g fill="currentColor">
+          <ellipse cx="0" cy="-7" rx="2.7" ry="4.6" />
+          <ellipse cx="0" cy="-7" rx="2.7" ry="4.6" transform="rotate(72)" />
+          <ellipse cx="0" cy="-7" rx="2.7" ry="4.6" transform="rotate(144)" />
+          <ellipse cx="0" cy="-7" rx="2.7" ry="4.6" transform="rotate(216)" />
+          <ellipse cx="0" cy="-7" rx="2.7" ry="4.6" transform="rotate(288)" />
+          <circle cx="0" cy="0" r="2" />
+        </g>
+      </g>
+
+      <path id="md-petal-outer" d="M0 -182 C16 -166 16 -144 0 -128 C-16 -144 -16 -166 0 -182 Z" />
+      <path id="md-petal-inner" d="M0 -116 C12 -104 12 -76 0 -64 C-12 -76 -12 -104 0 -116 Z" />
+
+      <g id="mandala" fill="none" stroke="currentColor" stroke-width="0.9" stroke-linecap="round">
+        <circle r="192" />
+        <circle r="184" stroke-dasharray="1 6" />
+        <circle r="150" />
+        <circle r="142" stroke-dasharray="1 5" />
+        <circle r="120" stroke-dasharray="0.5 5" />
+        <circle r="112" />
+        <circle r="64" />
+        <circle r="24" />
+        <circle r="5" fill="currentColor" stroke="none" />
+        <g>
+          <use href="#md-petal-outer" />
+          <use href="#md-petal-outer" transform="rotate(15)" />
+          <use href="#md-petal-outer" transform="rotate(30)" />
+          <use href="#md-petal-outer" transform="rotate(45)" />
+          <use href="#md-petal-outer" transform="rotate(60)" />
+          <use href="#md-petal-outer" transform="rotate(75)" />
+          <use href="#md-petal-outer" transform="rotate(90)" />
+          <use href="#md-petal-outer" transform="rotate(105)" />
+          <use href="#md-petal-outer" transform="rotate(120)" />
+          <use href="#md-petal-outer" transform="rotate(135)" />
+          <use href="#md-petal-outer" transform="rotate(150)" />
+          <use href="#md-petal-outer" transform="rotate(165)" />
+          <use href="#md-petal-outer" transform="rotate(180)" />
+          <use href="#md-petal-outer" transform="rotate(195)" />
+          <use href="#md-petal-outer" transform="rotate(210)" />
+          <use href="#md-petal-outer" transform="rotate(225)" />
+          <use href="#md-petal-outer" transform="rotate(240)" />
+          <use href="#md-petal-outer" transform="rotate(255)" />
+          <use href="#md-petal-outer" transform="rotate(270)" />
+          <use href="#md-petal-outer" transform="rotate(285)" />
+          <use href="#md-petal-outer" transform="rotate(300)" />
+          <use href="#md-petal-outer" transform="rotate(315)" />
+          <use href="#md-petal-outer" transform="rotate(330)" />
+          <use href="#md-petal-outer" transform="rotate(345)" />
+        </g>
+        <g stroke-width="0.7">
+          <use href="#md-petal-inner" />
+          <use href="#md-petal-inner" transform="rotate(30)" />
+          <use href="#md-petal-inner" transform="rotate(60)" />
+          <use href="#md-petal-inner" transform="rotate(90)" />
+          <use href="#md-petal-inner" transform="rotate(120)" />
+          <use href="#md-petal-inner" transform="rotate(150)" />
+          <use href="#md-petal-inner" transform="rotate(180)" />
+          <use href="#md-petal-inner" transform="rotate(210)" />
+          <use href="#md-petal-inner" transform="rotate(240)" />
+          <use href="#md-petal-inner" transform="rotate(270)" />
+          <use href="#md-petal-inner" transform="rotate(300)" />
+          <use href="#md-petal-inner" transform="rotate(330)" />
+        </g>
+      </g>
+    </defs>
+  </svg>
+
+  <audio id="bgMusic" loop preload="none">
+    <source src="assets/music.mp3" type="audio/mpeg" />
+  </audio>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

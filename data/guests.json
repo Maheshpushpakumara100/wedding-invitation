@@ -1,0 +1,22 @@
+{
+  "couple": {
+    "bride": "Dhananjani",
+    "groom": "Mahesh"
+  },
+  "guests": [
+    {
+      "slug": "silva-family",
+      "salutation": "Mr. & Mrs.",
+      "name": "Silva",
+      "display": "Mr. & Mrs. Silva",
+      "phone": ""
+    },
+    {
+      "slug": "janaka-72lt",
+      "salutation": "",
+      "name": "Janaka",
+      "display": "Janaka",
+      "phone": ""
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+# Keep the personal source image folder and docs out of the published site.
+exclude:
+  - "Invitation card"
+  - README.md
