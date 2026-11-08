@@ -4,20 +4,24 @@
  * ============================================================
  *
  *  What this does
- *  - Stores the guest list in a Google Sheet.
+ *  - Stores the guest lists in two tabs of one Google Sheet:
+ *      Guests       -> groom's list (admin.html)
+ *      BrideGuests  -> bride's list (admin-dhananjani.html)
  *  - Public read endpoint so the invitation can greet a guest by
- *    their personal link (?g=CODE). Supports JSONP, so it works
- *    even when cross-origin fetch is blocked.
- *  - Password-protected admin API used by admin.html to sign in
- *    (username + password) and add / edit / delete guests.
+ *    their personal link (?g=CODE). Searches both tabs. Supports
+ *    JSONP, so it works even when cross-origin fetch is blocked.
+ *  - Two password-protected admin accounts (groom + bride). The
+ *    signed-in role decides which tab is read/written. Credentials
+ *    are stored separately, so neither side can see the other's list.
  *
  *  FIRST-TIME SETUP
  *  1. Open https://script.google.com and create a new project.
  *  2. Delete the default code, paste this whole file, then save.
- *  3. Change DEFAULT_ADMIN_USERNAME / DEFAULT_ADMIN_PASSWORD below.
+ *  3. Change the DEFAULT_* credentials below (groom + bride).
  *  4. Select the `setup` function and click Run. Authorise it.
- *     A Google Sheet named "D&M Wedding Guest List" is created and
- *     its ID is stored in Script Properties.
+ *     A Google Sheet named "D&M Wedding Guest List" is created with
+ *     Guests, BrideGuests and Settings tabs; its ID is stored in
+ *     Script Properties.
  *  5. Deploy > New deployment > type "Web app".
  *       - Description:     Wedding API
  *       - Execute as:      Me
@@ -25,10 +29,10 @@
  *     Copy the /exec URL.
  *  6. Paste that URL into assets/config.js as API_URL.
  *
- *  CHANGE THE PASSWORD LATER
- *  - Use the "Change password" form on admin.html, or
- *  - edit NEW_ADMIN_USERNAME / NEW_ADMIN_PASSWORD below and run
- *    `resetAdminCredentials` from the editor.
+ *  CHANGE A PASSWORD LATER
+ *  - Use the "Change password" form in either admin page, or
+ *  - edit the NEW_* values below and run `resetAdminCredentials`
+ *    (groom) or `resetBrideCredentials` (bride) from the editor.
  *
  *  NOTE: Apps Script web apps cannot send custom CORS headers from
  *  a text response, so the browser client sends "simple" requests
@@ -40,17 +44,26 @@
 
 var SPREADSHEET_NAME = 'D&M Wedding Guest List';
 var GUESTS_SHEET = 'Guests';
+var BRIDE_GUESTS_SHEET = 'BrideGuests';
 var SETTINGS_SHEET = 'Settings';
 var GUEST_HEADERS = ['slug', 'salutation', 'name', 'display', 'phone', 'createdAt', 'updatedAt'];
 var SESSION_TTL_SECONDS = 8 * 60 * 60; // 8 hours
 
-// Used by setup() the very first time only.
+// Groom-side admin account. Used by setup() the very first time only.
 var DEFAULT_ADMIN_USERNAME = 'admin';
 var DEFAULT_ADMIN_PASSWORD = 'D&M2026';
+
+// Bride-side admin account. Used by setup() the very first time only.
+var DEFAULT_BRIDE_ADMIN_USERNAME = 'dhananjani';
+var DEFAULT_BRIDE_ADMIN_PASSWORD = 'Bride2026!';
 
 // Used by resetAdminCredentials() when you run it from the editor.
 var NEW_ADMIN_USERNAME = 'admin';
 var NEW_ADMIN_PASSWORD = 'ChangeMe123!';
+
+// Used by resetBrideCredentials() when you run it from the editor.
+var NEW_BRIDE_ADMIN_USERNAME = 'dhananjani';
+var NEW_BRIDE_ADMIN_PASSWORD = 'ChangeMe123!';
 
 var PROP = PropertiesService.getScriptProperties();
 
@@ -63,16 +76,21 @@ var PROP = PropertiesService.getScriptProperties();
 function setup() {
   var ss = getOrCreateSpreadsheet_();
   ensureSheet_(ss, GUESTS_SHEET, GUEST_HEADERS);
+  ensureSheet_(ss, BRIDE_GUESTS_SHEET, GUEST_HEADERS);
   ensureSheet_(ss, SETTINGS_SHEET, ['key', 'value']);
   ensureDefaultSettings_(ss);
 
   if (!PROP.getProperty('ADMIN_USERNAME')) {
-    setAdminCredentials_(DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_PASSWORD);
+    setAdminCredentials_(DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_PASSWORD, 'groom');
+  }
+  if (!PROP.getProperty('BRIDE_ADMIN_USERNAME')) {
+    setAdminCredentials_(DEFAULT_BRIDE_ADMIN_USERNAME, DEFAULT_BRIDE_ADMIN_PASSWORD, 'bride');
   }
 
   var url = ss.getUrl();
   Logger.log('Guest list spreadsheet: ' + url);
-  Logger.log('Admin username: ' + PROP.getProperty('ADMIN_USERNAME'));
+  Logger.log('Groom admin username: ' + PROP.getProperty('ADMIN_USERNAME'));
+  Logger.log('Bride admin username: ' + PROP.getProperty('BRIDE_ADMIN_USERNAME'));
   Logger.log('Now deploy as a Web App and paste the /exec URL into assets/config.js');
   return url;
 }
@@ -82,8 +100,18 @@ function setup() {
  * Edit NEW_ADMIN_USERNAME / NEW_ADMIN_PASSWORD, then run this.
  */
 function resetAdminCredentials() {
-  setAdminCredentials_(NEW_ADMIN_USERNAME, NEW_ADMIN_PASSWORD);
-  Logger.log('Admin credentials updated. Username: ' + NEW_ADMIN_USERNAME);
+  setAdminCredentials_(NEW_ADMIN_USERNAME, NEW_ADMIN_PASSWORD, 'groom');
+  Logger.log('Groom admin credentials updated. Username: ' + NEW_ADMIN_USERNAME);
+  return true;
+}
+
+/**
+ * Update the bride-side admin username/password from the editor.
+ * Edit NEW_BRIDE_ADMIN_USERNAME / NEW_BRIDE_ADMIN_PASSWORD, then run this.
+ */
+function resetBrideCredentials() {
+  setAdminCredentials_(NEW_BRIDE_ADMIN_USERNAME, NEW_BRIDE_ADMIN_PASSWORD, 'bride');
+  Logger.log('Bride admin credentials updated. Username: ' + NEW_BRIDE_ADMIN_USERNAME);
   return true;
 }
 
@@ -138,18 +166,32 @@ function ensureDefaultSettings_(ss) {
 
 /* ------------------------ Admin auth ------------------------- */
 
-function setAdminCredentials_(username, password) {
+function propPrefix_(role) {
+  return role === 'bride' ? 'BRIDE_ADMIN_' : 'ADMIN_';
+}
+
+function setAdminCredentials_(username, password, role) {
   username = String(username || '').trim();
   password = String(password || '');
   if (!username || !password) throw new Error('Username and password are required');
+  var p = propPrefix_(role);
   var salt = Utilities.getUuid().replace(/-/g, '');
-  PROP.setProperties({
-    ADMIN_USERNAME: username,
-    ADMIN_SALT: salt,
-    ADMIN_HASH: hashPassword_(password, salt),
-    ADMIN_UPDATED: new Date().toISOString()
-  });
+  var props = {};
+  props[p + 'USERNAME'] = username;
+  props[p + 'SALT'] = salt;
+  props[p + 'HASH'] = hashPassword_(password, salt);
+  props[p + 'UPDATED'] = new Date().toISOString();
+  PROP.setProperties(props);
   return true;
+}
+
+function passwordMatchesRole_(username, password, role) {
+  var p = propPrefix_(role);
+  var storedUser = PROP.getProperty(p + 'USERNAME');
+  var salt = PROP.getProperty(p + 'SALT');
+  var hash = PROP.getProperty(p + 'HASH');
+  if (!storedUser || !salt || !hash) return false;
+  return username.toLowerCase() === storedUser.toLowerCase() && hashPassword_(password, salt) === hash;
 }
 
 function hashPassword_(password, salt) {
@@ -164,15 +206,15 @@ function hashPassword_(password, salt) {
   }).join('');
 }
 
-function createSession_(username) {
+function createSession_(username, role) {
   var token = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
   var exp = Date.now() + SESSION_TTL_SECONDS * 1000;
   CacheService.getScriptCache().put(
     'sess_' + token,
-    JSON.stringify({ username: username, exp: exp }),
+    JSON.stringify({ username: username, role: role, exp: exp }),
     SESSION_TTL_SECONDS
   );
-  return { token: token, username: username, expiresAt: exp };
+  return { token: token, username: username, role: role, expiresAt: exp };
 }
 
 function getSession_(token) {
@@ -195,53 +237,61 @@ function destroySession_(token) {
 function login_(payload) {
   var username = String(payload.username || '').trim();
   var password = String(payload.password || '');
-  var storedUser = PROP.getProperty('ADMIN_USERNAME');
-  var salt = PROP.getProperty('ADMIN_SALT');
-  var hash = PROP.getProperty('ADMIN_HASH');
 
-  if (!storedUser || !salt || !hash) {
-    return { ok: false, error: 'not_configured' };
-  }
-  if (username.toLowerCase() !== storedUser.toLowerCase() || hashPassword_(password, salt) !== hash) {
+  var role = null;
+  if (passwordMatchesRole_(username, password, 'groom')) role = 'groom';
+  else if (passwordMatchesRole_(username, password, 'bride')) role = 'bride';
+
+  if (!role) {
+    if (!PROP.getProperty('ADMIN_USERNAME') && !PROP.getProperty('BRIDE_ADMIN_USERNAME')) {
+      return { ok: false, error: 'not_configured' };
+    }
     return { ok: false, error: 'invalid_credentials' };
   }
 
-  var s = createSession_(storedUser);
+  var s = createSession_(PROP.getProperty(propPrefix_(role) + 'USERNAME'), role);
   return {
     ok: true,
     token: s.token,
     username: s.username,
+    role: role,
     expiresAt: s.expiresAt,
-    guests: readGuests_(),
+    guests: readGuests_(role),
     settings: readSettings_()
   };
 }
 
-function changePassword_(payload) {
+function changePassword_(payload, role) {
   var current = String(payload.currentPassword || '');
   var next = String(payload.newPassword || '');
-  var salt = PROP.getProperty('ADMIN_SALT');
-  var hash = PROP.getProperty('ADMIN_HASH');
+  var p = propPrefix_(role);
+  var salt = PROP.getProperty(p + 'SALT');
+  var hash = PROP.getProperty(p + 'HASH');
 
   if (!salt || !hash) throw new Error('Admin is not configured yet');
   if (hashPassword_(current, salt) !== hash) throw new Error('Current password is incorrect');
   if (next.length < 6) throw new Error('New password must be at least 6 characters');
 
-  setAdminCredentials_(PROP.getProperty('ADMIN_USERNAME'), next);
+  setAdminCredentials_(PROP.getProperty(p + 'USERNAME'), next, role);
   return { ok: true };
 }
 
 /* ------------------------ Guest data ------------------------- */
 
-function getGuestsSheet_() {
+function sheetNameForRole_(role) {
+  return role === 'bride' ? BRIDE_GUESTS_SHEET : GUESTS_SHEET;
+}
+
+function getGuestsSheet_(role) {
   var ss = getSpreadsheet_();
-  var sheet = ss.getSheetByName(GUESTS_SHEET);
-  if (!sheet) sheet = ensureSheet_(ss, GUESTS_SHEET, GUEST_HEADERS);
+  var name = sheetNameForRole_(role);
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) sheet = ensureSheet_(ss, name, GUEST_HEADERS);
   return sheet;
 }
 
-function readGuests_() {
-  var sheet = getGuestsSheet_();
+function readGuests_(role) {
+  var sheet = getGuestsSheet_(role);
   var last = sheet.getLastRow();
   if (last < 2) return [];
   var values = sheet.getRange(2, 1, last - 1, GUEST_HEADERS.length).getValues();
@@ -261,8 +311,8 @@ function readGuests_() {
   return out;
 }
 
-function writeGuests_(guests) {
-  var sheet = getGuestsSheet_();
+function writeGuests_(role, guests) {
+  var sheet = getGuestsSheet_(role);
   var last = sheet.getLastRow();
   if (last > 1) sheet.getRange(2, 1, last - 1, GUEST_HEADERS.length).clearContent();
   if (!guests.length) return;
@@ -335,13 +385,13 @@ function withLock_(fn) {
   }
 }
 
-function listGuests_() {
-  return { ok: true, guests: readGuests_(), settings: readSettings_() };
+function listGuests_(role) {
+  return { ok: true, guests: readGuests_(role), settings: readSettings_() };
 }
 
-function addGuest_(payload) {
+function addGuest_(payload, role) {
   return withLock_(function () {
-    var guests = readGuests_();
+    var guests = readGuests_(role);
     var guest = normalizeGuestInput_(payload.guest);
     if (!guest.name && !guest.display) throw new Error('Guest name is required');
     if (guests.some(function (g) { return g.slug === guest.slug; })) {
@@ -351,14 +401,14 @@ function addGuest_(payload) {
     guest.createdAt = now;
     guest.updatedAt = now;
     guests.push(guest);
-    writeGuests_(guests);
+    writeGuests_(role, guests);
     return { ok: true, guest: guest, guests: guests, settings: readSettings_() };
   });
 }
 
-function updateGuest_(payload) {
+function updateGuest_(payload, role) {
   return withLock_(function () {
-    var guests = readGuests_();
+    var guests = readGuests_(role);
     var original = slugify_(payload.originalSlug || (payload.guest && payload.guest.slug) || '');
     var index = -1;
     for (var i = 0; i < guests.length; i++) {
@@ -373,22 +423,22 @@ function updateGuest_(payload) {
     guest.createdAt = guests[index].createdAt;
     guest.updatedAt = new Date().toISOString();
     guests[index] = guest;
-    writeGuests_(guests);
+    writeGuests_(role, guests);
     return { ok: true, guest: guest, guests: guests, settings: readSettings_() };
   });
 }
 
-function deleteGuest_(payload) {
+function deleteGuest_(payload, role) {
   return withLock_(function () {
     var slug = slugify_(payload.slug || '');
     if (!slug) throw new Error('Missing guest slug');
-    var guests = readGuests_().filter(function (g) { return g.slug !== slug; });
-    writeGuests_(guests);
+    var guests = readGuests_(role).filter(function (g) { return g.slug !== slug; });
+    writeGuests_(role, guests);
     return { ok: true, guests: guests, settings: readSettings_() };
   });
 }
 
-function replaceGuests_(payload) {
+function replaceGuests_(payload, role) {
   return withLock_(function () {
     var list = Array.isArray(payload.guests) ? payload.guests : [];
     var seen = {};
@@ -402,7 +452,7 @@ function replaceGuests_(payload) {
       guest.updatedAt = raw.updatedAt || now;
       return guest;
     });
-    writeGuests_(guests);
+    writeGuests_(role, guests);
     return { ok: true, guests: guests, settings: readSettings_() };
   });
 }
@@ -467,18 +517,21 @@ function handleGet_(params) {
   if (action === 'guest') {
     var slug = String(params.slug || '').trim();
     if (!slug) return { ok: false, error: 'missing_slug' };
-    var guests = readGuests_();
-    for (var i = 0; i < guests.length; i++) {
-      if (guests[i].slug.toLowerCase() === slug.toLowerCase()) {
-        return {
-          ok: true,
-          guest: {
-            slug: guests[i].slug,
-            salutation: guests[i].salutation,
-            name: guests[i].name,
-            display: guests[i].display
-          }
-        };
+    var roles = ['groom', 'bride'];
+    for (var r = 0; r < roles.length; r++) {
+      var guests = readGuests_(roles[r]);
+      for (var i = 0; i < guests.length; i++) {
+        if (guests[i].slug.toLowerCase() === slug.toLowerCase()) {
+          return {
+            ok: true,
+            guest: {
+              slug: guests[i].slug,
+              salutation: guests[i].salutation,
+              name: guests[i].name,
+              display: guests[i].display
+            }
+          };
+        }
       }
     }
     return { ok: false, error: 'not_found' };
@@ -506,28 +559,29 @@ function doPost(e) {
     if (!session) {
       return respond_({ ok: false, error: 'unauthorized' });
     }
+    var role = session.role === 'bride' ? 'bride' : 'groom';
 
     if (action === 'logout') {
       destroySession_(payload.token);
       return respond_({ ok: true });
     }
     if (action === 'ping') {
-      return respond_({ ok: true, username: session.username });
+      return respond_({ ok: true, username: session.username, role: role });
     }
     if (action === 'listGuests') {
-      return respond_(listGuests_());
+      return respond_(listGuests_(role));
     }
     if (action === 'addGuest') {
-      return respond_(addGuest_(payload));
+      return respond_(addGuest_(payload, role));
     }
     if (action === 'updateGuest') {
-      return respond_(updateGuest_(payload));
+      return respond_(updateGuest_(payload, role));
     }
     if (action === 'deleteGuest') {
-      return respond_(deleteGuest_(payload));
+      return respond_(deleteGuest_(payload, role));
     }
     if (action === 'replaceGuests') {
-      return respond_(replaceGuests_(payload));
+      return respond_(replaceGuests_(payload, role));
     }
     if (action === 'getSettings') {
       return respond_({ ok: true, settings: readSettings_() });
@@ -536,7 +590,7 @@ function doPost(e) {
       return respond_(saveSettings_(payload));
     }
     if (action === 'changePassword') {
-      return respond_(changePassword_(payload));
+      return respond_(changePassword_(payload, role));
     }
 
     return respond_({ ok: false, error: 'unknown_action' });

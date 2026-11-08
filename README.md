@@ -18,7 +18,8 @@ A floral‑elegant, single‑page digital wedding card with:
 
 ```
 index.html            → the invitation card (guests see this)
-admin.html            → the private Guest Link Manager
+admin.html            → groom's private Guest Link Manager
+admin-dhananjani.html → bride's private Guest Link Manager (separate list + login)
 assets/
   config.js           → API URL + site address (edit this)
   style.css           → card styling (floral theme)
@@ -61,8 +62,11 @@ Then open:
 > Tip: add `?skip=1` to any link (e.g. `http://localhost:8000/?skip=1`) to skip the
 > intro video and go straight to the invitation.
 
-**Admin login:** username + password configured in the Apps Script backend
-(default first-run `admin` / `D&M2026`). Complete the backend setup below first.
+**Admin logins:** username + password configured in the Apps Script backend.
+- Groom: <http://localhost:8000/admin.html> (default first-run `admin` / `D&M2026`)
+- Bride: <http://localhost:8000/admin-dhananjani.html> (default first-run `dhananjani` / `Bride2026!`)
+
+Complete the backend setup below first.
 
 ---
 
@@ -77,19 +81,25 @@ The admin login, guest list and guest lookup all run through a free
 2. Click **New project**.
 3. Open `apps-script/Code.gs` from this folder, copy everything, and paste it
    over the default code in the editor.
-4. Near the top, change these two lines to your own credentials:
+4. Near the top, change these lines to your own credentials:
    ```js
+   // Groom-side admin (admin.html)
    var DEFAULT_ADMIN_USERNAME = 'admin';
    var DEFAULT_ADMIN_PASSWORD = 'D&M2026';
+
+   // Bride-side admin (admin-dhananjani.html)
+   var DEFAULT_BRIDE_ADMIN_USERNAME = 'dhananjani';
+   var DEFAULT_BRIDE_ADMIN_PASSWORD = 'Bride2026!';
    ```
 5. Click **Save** (the disk icon).
 
 ### Step 2 — Run the setup function
 1. In the function dropdown (top toolbar), choose **setup**.
 2. Click **Run**. Approve the Google permissions when prompted.
-3. A new Google Sheet called **D&M Wedding Guest List** is created with two
-   tabs: `Guests` and `Settings`. Its ID is saved automatically.
-   (Check **View → Logs** to see the Sheet URL.)
+3. A new Google Sheet called **D&M Wedding Guest List** is created with three
+   tabs: `Guests` (groom's list), `BrideGuests` (bride's list) and `Settings`.
+   Its ID is saved automatically.
+   (Check **View → Logs** to see the Sheet URL and both admin usernames.)
 
 ### Step 3 — Deploy as a Web App
 1. Click **Deploy → New deployment**.
@@ -112,12 +122,22 @@ The admin login, guest list and guest lookup all run through a free
 3. Commit/upload the change.
 
 ### Step 5 — Sign in
-1. Open `admin.html` (locally or on your live site).
-2. Sign in with the username/password from Step 1.
-3. Add guests — they save straight to the Google Sheet.
-4. Use **Account → Change password** after the first login.
+1. Open `admin.html` (locally or on your live site) for the groom's list.
+2. Open `admin-dhananjani.html` for the bride's list — a separate login and a
+   separate `BrideGuests` sheet tab, so each side manages only their own guests.
+3. Sign in with the username/password from Step 1.
+4. Add guests — they save straight to the Google Sheet.
+5. Use **Account → Change password** after the first login (changes only that
+   side's password). From the editor, run `resetAdminCredentials` for the groom
+   or `resetBrideCredentials` for the bride.
+
+> Personal links work for guests from either list: the public API checks both
+> the `Guests` and `BrideGuests` tabs when it greets a guest.
 
 ### Notes
+- **Already deployed an earlier version?** Paste the updated `Code.gs`, run
+  **setup** again (this adds the `BrideGuests` tab and the bride login without
+  touching existing guests), then deploy a **new version**.
 - **Test the API:** open `YOUR_URL/exec?action=health` in a browser. You should
   see JSON like `{"ok":true,"service":"dm-wedding-api",...}`.
 - **After editing the Apps Script code**, create a new version:
@@ -171,18 +191,22 @@ You need a free GitHub account: <https://github.com/signup>
    https://USERNAME.github.io/wedding/
    ```
 
-### Step 4 — Connect the admin page to your live site
+### Step 4 — Connect the admin pages to your live site
 1. Open `https://USERNAME.github.io/wedding/admin.html`.
-2. Sign in with the username/password you set in the Apps Script backend.
+2. Sign in with the groom username/password you set in the Apps Script backend.
 3. In **Site link**, paste `https://USERNAME.github.io/wedding/`
    (it must end with a slash) and click **Save**.
 4. Add your guests. The generated links will now use your real address.
+5. For the bride's list, open
+   `https://USERNAME.github.io/wedding/admin-dhananjani.html` and sign in with
+   the bride credentials. Both pages share the same **Site link**.
 
 ---
 
 ## 4. Creating personalised guest links
 
-1. Go to `https://USERNAME.github.io/wedding/admin.html`.
+1. Go to `https://USERNAME.github.io/wedding/admin.html` (groom) or
+   `https://USERNAME.github.io/wedding/admin-dhananjani.html` (bride).
 2. Fill in the guest:
    - **Salutation** (Mr., Mrs., Mr. & Mrs., Family of, etc.)
    - **Name**
@@ -214,13 +238,13 @@ You can also test without a code using `?to=Mr.%20%26%20Mrs.%20Silva`.
 
 ## 5. WhatsApp RSVP
 
-- The **Send reply on WhatsApp** button opens a chat with **Mahesh (071 79 79 436)**
-  and pre‑fills the guest’s name, attendance choice and number of guests.
-- The two contact cards let guests call either of you.
-- To change the primary RSVP number, edit this line in `assets/app.js`:
+- Two reply buttons open WhatsApp with the guest’s name and attendance choice
+  pre‑filled: one to **Dhananjani (071 55 34 712)**, one to **Mahesh (071 79 79 436)**.
+- To change the numbers, edit these lines in `assets/app.js`:
 
   ```js
-  var RSVP_WHATSAPP = "94717979436"; // Mahesh — primary RSVP number
+  var RSVP_WHATSAPP_DHANANJANI = "94715534712"; // Dhananjani
+  var RSVP_WHATSAPP = "94717979436";            // Mahesh
   ```
 
   Use the international format without `+` (e.g. `94717979436`).
@@ -236,11 +260,12 @@ You can also test without a code using `?to=Mr.%20%26%20Mrs.%20Silva`.
 | Couple names, date, venue, ceremony text | `index.html` |
 | Countdown date/time | `WEDDING_ISO` in `assets/app.js` (`2026-12-07T08:30:00+05:30`) |
 | Primary WhatsApp RSVP number | `RSVP_WHATSAPP` in `assets/app.js` |
-| Admin username / password | Apps Script backend (`resetAdminCredentials`) or **Account** panel in admin |
+| Groom admin username / password | Apps Script backend (`resetAdminCredentials`) or **Account** panel in `admin.html` |
+| Bride admin username / password | Apps Script backend (`resetBrideCredentials`) or **Account** panel in `admin-dhananjani.html` |
 | API endpoint | `API_URL` in `assets/config.js` |
 | Colours / fonts | `:root` variables at the top of `assets/style.css` |
 | Google Maps location | Search `Tranquil Hotel` links in `index.html` |
-| Guest list | Admin page (saved to Google Sheets) |
+| Guest lists | Admin pages (groom → `Guests` tab, bride → `BrideGuests` tab) |
 | Intro video | Replace `Videos/invitation-intro.mp4` (H.264 MP4; portrait or landscape) |
 
 ---

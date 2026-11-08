@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dhananjani's Guest List · Dhananjani &amp; Mahesh</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#f7f0e3" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css?v=12" />
+  <link rel="stylesheet" href="assets/admin.css?v=12" />
+</head>
+<body class="admin-page">
+
+  <div class="admin-shell">
+
+    <!-- LOGIN GATE -->
+    <div class="admin-gate" id="gate">
+      <div class="gate-card">
+        <p class="eyebrow">Private area · Bride</p>
+        <h1 class="gate-title">Dhananjani's Guest List</h1>
+        <p class="gate-text">Sign in to manage the bride's guest list and create personal invitation links.</p>
+        <form id="gateForm" class="gate-form gate-form-stack">
+          <input type="text" id="gateUser" placeholder="Username" autocomplete="username" required />
+          <input type="password" id="gatePass" placeholder="Password" autocomplete="current-password" required />
+          <button class="btn-solid" type="submit" id="gateSubmit">Sign in</button>
+        </form>
+        <p class="gate-error" id="gateError"></p>
+        <p class="gate-note">Accounts are validated by your Google Apps Script backend. Bride credentials are set in <code>apps-script/Code.gs</code>.</p>
+      </div>
+    </div>
+
+    <!-- ADMIN APP -->
+    <div class="admin-app" id="app" hidden>
+
+      <header class="admin-head">
+        <div>
+          <p class="eyebrow">Dhananjani &amp; Mahesh</p>
+          <h1 class="admin-title">Dhananjani's Guest List</h1>
+        </div>
+        <a class="btn-outline small" href="index.html" target="_blank" rel="noopener">View Invitation</a>
+      </header>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">Account</h2>
+          <button class="btn-outline small" id="logoutBtn" type="button">Sign out</button>
+        </div>
+        <p class="panel-help">Signed in as <strong id="adminUser">dhananjani</strong>. The bride's guest list is stored in Google Sheets.</p>
+        <form id="pwForm" class="guest-form password-form" novalidate>
+          <div class="grid-3">
+            <label class="field">
+              <span>Current password</span>
+              <input type="password" id="currentPw" autocomplete="current-password" />
+            </label>
+            <label class="field">
+              <span>New password</span>
+              <input type="password" id="newPw" autocomplete="new-password" />
+            </label>
+            <label class="field">
+              <span>Confirm new password</span>
+              <input type="password" id="confirmPw" autocomplete="new-password" />
+            </label>
+          </div>
+          <div class="row form-actions">
+            <button class="btn-outline" type="submit" id="changePwBtn">Change password</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title" id="formTitle">Add a guest</h2>
+        <form id="guestForm" class="guest-form" novalidate>
+          <div class="grid-2">
+            <label class="field">
+              <span>Salutation</span>
+              <select id="gSalutation">
+                <option value="">—</option>
+                <option>Mr.</option>
+                <option>Mrs.</option>
+                <option>Ms.</option>
+                <option>Mr. &amp; Mrs.</option>
+                <option>Dr.</option>
+                <option>Rev.</option>
+                <option>Family of</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Name</span>
+              <input type="text" id="gName" placeholder="e.g. Silva" />
+            </label>
+            <label class="field span-2">
+              <span>Display name (as shown on the card)</span>
+              <input type="text" id="gDisplay" placeholder="e.g. Mr. &amp; Mrs. Silva" />
+            </label>
+            <label class="field">
+              <span>Phone (optional, for WhatsApp)</span>
+              <input type="text" id="gPhone" placeholder="07X XX XX XXX" />
+            </label>
+            <label class="field">
+              <span>Guest link code</span>
+              <input type="text" id="gSlug" placeholder="e.g. silva-family" />
+            </label>
+          </div>
+          <div class="row form-actions">
+            <button class="btn-solid" type="submit" id="saveGuest">Add guest</button>
+            <button class="btn-outline" type="button" id="cancelEdit" hidden>Cancel</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">My guests <span class="count-badge" id="guestCount">0</span></h2>
+          <div class="row wrap">
+            <button class="btn-outline small" id="reloadBtn" type="button">Refresh</button>
+            <button class="btn-outline small" id="exportBtn" type="button">Download backup JSON</button>
+            <label class="btn-outline small import-label">
+              Import JSON
+              <input type="file" id="importInput" accept="application/json" hidden />
+            </label>
+          </div>
+        </div>
+
+        <div class="publish-note">
+          Changes save straight to the <code>BrideGuests</code> tab of your Google Sheet, separate from the groom's list.
+          The live invitation updates immediately.
+        </div>
+
+        <div class="table-wrap">
+          <table class="guest-table">
+            <thead>
+              <tr><th>Guest</th><th>Invitation link</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="guestRows"></tbody>
+          </table>
+          <p class="empty" id="emptyMsg">No guests yet. Add your first guest above.</p>
+        </div>
+      </section>
+
+      <footer class="admin-foot">
+        <p>Personal links use <code>?g=code</code>. Each guest sees their own name on the invitation.</p>
+      </footer>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>window.DM_ADMIN_ROLE = "bride";</script>
+  <script src="assets/config.js?v=12"></script>
+  <script src="assets/admin.js?v=12"></script>
+</body>
+</html>

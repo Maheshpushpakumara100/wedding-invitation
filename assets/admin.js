@@ -13,8 +13,9 @@
   var CONFIG = window.DM_CONFIG || {};
   var API_URL = String(CONFIG.API_URL || "").trim();
 
-  var TOKEN_KEY = "dm_admin_token";
-  var USER_KEY = "dm_admin_user";
+  var ROLE = String(window.DM_ADMIN_ROLE || "groom").toLowerCase() === "bride" ? "bride" : "groom";
+  var TOKEN_KEY = "dm_admin_token_" + ROLE;
+  var USER_KEY = "dm_admin_user_" + ROLE;
   var BASE_KEY = "dm_wedding_base";
   var COUPLE = { bride: "Dhananjani", groom: "Mahesh" };
 
@@ -61,7 +62,7 @@
     var v = String(value || "").trim();
     if (!v) return "";
     v = v.split("?")[0].split("#")[0];
-    v = v.replace(/\/?(index|admin)\.html?$/i, "");
+    v = v.replace(/\/?(index|admin[^\/]*)\.html?$/i, "");
     if (!/^https?:\/\//i.test(v)) v = "https://" + v;
     if (!v.endsWith("/")) v += "/";
     return v;
@@ -70,7 +71,7 @@
   function deriveBase() {
     if (location.protocol === "file:") return "";
     var href = location.href.split("?")[0].split("#")[0];
-    href = href.replace(/admin\.html?$/i, "").replace(/index\.html?$/i, "");
+    href = href.replace(/admin[^\/]*\.html?$/i, "").replace(/index\.html?$/i, "");
     if (!href.endsWith("/")) href += "/";
     return href;
   }
@@ -446,12 +447,12 @@
     var url = URL.createObjectURL(blob);
     var a = document.createElement("a");
     a.href = url;
-    a.download = "guests.json";
+    a.download = ROLE === "bride" ? "bride-guests.json" : "guests.json";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     window.setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
-    toast("guests.json downloaded (also used as the offline fallback)");
+    toast(a.download + " downloaded");
   }
 
   /* ---------- App bindings ---------- */
