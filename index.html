@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Great+Vibes&family=Jost:wght@300;400;500&family=Noto+Sans+Sinhala:wght@300;400;500&family=Noto+Serif+Sinhala:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="assets/style.css?v=11" />
 </head>
 <body>
 
@@ -56,7 +56,7 @@
     </div>
 
     <div class="intro-video" id="introVideo" aria-hidden="true">
-      <video id="introVideoEl" src="Videos/invitation-intro.mp4" playsinline preload="auto"></video>
+      <video id="introVideoEl" src="Videos/invitation-intro.mp4?v=2" playsinline preload="auto"></video>
     </div>
 
     <div class="intro-inner">
@@ -115,14 +115,12 @@
 
         <p class="families-line" data-i18n="introTogether">Together with our families</p>
         <p class="eyebrow" data-i18n="heroEyebrow">The Wedding Celebration of</p>
-        <h1 class="names"><span data-i18n="bride">Dhananjani</span> <span class="amp">&amp;</span> <span data-i18n="groom">Mahesh</span></h1>
+        <h1 class="names"><span data-i18n="bride">Dhananjani</span><br /><span class="amp">&amp;</span><br /><span data-i18n="groom">Mahesh</span></h1>
         <div class="ornament" aria-hidden="true">
           <span class="ornament-line"></span>
           <span class="ornament-flower">✿</span>
           <span class="ornament-line"></span>
         </div>
-        <p class="hero-date" data-i18n="heroDate">Monday · 07 December 2026</p>
-        <p class="hero-place" data-i18n="heroPlace">Tranquil Hotel · Naranwala, Waliweriya</p>
         <p class="guest-line guest-line-bottom" data-i18n="guestLine">You are warmly invited to share in our joy.</p>
 
         <a class="scroll-cue" href="#countdown" aria-label="Scroll to countdown" data-i18n-aria="scrollAria">
@@ -185,14 +183,14 @@
           <p class="detail-text" data-i18n="detail1Text">The wedding celebration begins at 08.30 AM and continues until 04.00 PM.</p>
         </article>
         <article class="detail-card">
-          <p class="detail-kicker">09.48 AM</p>
+          <p class="detail-kicker">09.48 AM – 10.24 AM</p>
           <h3 class="detail-title" data-i18n="poruwaTitle">Poruwa Ceremony</h3>
-          <p class="detail-text" data-i18n="detail2Text">The traditional Poruwa ceremony will be held at 09.48 AM.</p>
+          <p class="detail-text" data-i18n="detail2Text">The traditional Poruwa ceremony will be held from 09.48 AM to 10.24 AM.</p>
         </article>
         <article class="detail-card">
-          <p class="detail-kicker" data-i18n="venueKicker">The Venue</p>
-          <h3 class="detail-title" data-i18n="venueName">Tranquil Hotel</h3>
-          <p class="detail-text" data-i18n="detail3Text">Naranwala, Waliweriya. We look forward to celebrating with you there.</p>
+          <p class="detail-kicker">12.15 PM</p>
+          <h3 class="detail-title" data-i18n="lunchTitle">Lunch Buffet</h3>
+          <p class="detail-text" data-i18n="lunchText">The lunch buffet opens at 12.15 PM.</p>
         </article>
       </div>
 
@@ -210,13 +208,48 @@
         <span class="ornament-line"></span><span class="ornament-flower">✿</span><span class="ornament-line"></span>
       </div>
       <div class="venue-card">
-        <figure class="venue-figure">
-          <img src="images/tranquil_1.webp" alt="Tranquil Hotel, Naranwala, Waliweriya" width="1007" height="671" loading="lazy" decoding="async" />
-        </figure>
         <p class="venue-kicker" data-i18n="venueKicker">Venue</p>
         <h3 class="venue-name" data-i18n="venueName">Tranquil Hotel</h3>
         <p class="venue-address" data-i18n="venueAddress">Naranwala, Waliweriya</p>
         <a class="btn-outline" href="https://www.google.com/maps/search/?api=1&query=Tranquil%20Hotel%2C%20Naranwala%2C%20Waliweriya" target="_blank" rel="noopener" data-i18n="openMaps">Open in Maps</a>
+      </div>
+    </section>
+
+    <!-- PHOTO ALBUM -->
+    <section class="section album-section" id="gallery">
+      <p class="section-label" data-i18n="momentsLabel">Our moments</p>
+      <h2 class="section-title" data-i18n="momentsTitle">Little memories</h2>
+      <div class="ornament" aria-hidden="true">
+        <span class="ornament-line"></span><span class="ornament-flower">✿</span><span class="ornament-line"></span>
+      </div>
+      <div class="album-slider" data-album>
+        <div class="album-viewport" data-album-viewport>
+          <div class="album-track" data-album-track>
+            <figure class="album-slide">
+              <button class="album-open" type="button" data-album-open aria-label="Maximize photo 1">
+                <img src="images/album-1.jpeg" alt="Dhananjani and Mahesh" loading="lazy" decoding="async" />
+              </button>
+            </figure>
+            <figure class="album-slide">
+              <button class="album-open" type="button" data-album-open aria-label="Maximize photo 2">
+                <img src="images/album-2.jpeg" alt="Dhananjani and Mahesh" loading="lazy" decoding="async" />
+              </button>
+            </figure>
+            <figure class="album-slide">
+              <button class="album-open" type="button" data-album-open aria-label="Maximize photo 3">
+                <img src="images/album-3.jpeg" alt="Dhananjani and Mahesh" loading="lazy" decoding="async" />
+              </button>
+            </figure>
+            <figure class="album-slide">
+              <button class="album-open" type="button" data-album-open aria-label="Maximize photo 4">
+                <img src="images/album-4.jpeg" alt="Dhananjani and Mahesh" loading="lazy" decoding="async" />
+              </button>
+            </figure>
+          </div>
+          <button class="album-nav album-prev" type="button" data-album-prev aria-label="Previous photo">&#8249;</button>
+          <button class="album-nav album-next" type="button" data-album-next aria-label="Next photo">&#8250;</button>
+        </div>
+        <div class="album-dots" data-album-dots></div>
       </div>
     </section>
 
@@ -232,7 +265,7 @@
       <form class="rsvp-form" id="rsvpForm" novalidate>
         <label class="field">
           <span data-i18n="yourName">Your name</span>
-          <input type="text" id="rsvpName" name="name" placeholder="Full name" autocomplete="name" required data-i18n-placeholder="fullName" />
+          <input type="text" id="rsvpName" name="name" placeholder="Full name" autocomplete="name" readonly aria-readonly="true" required data-i18n-placeholder="fullName" />
         </label>
 
         <fieldset class="field radio-field">
@@ -247,16 +280,10 @@
           </label>
         </fieldset>
 
-        <label class="field">
-          <span data-i18n="numGuests">Number of guests</span>
-          <select id="rsvpCount" name="count">
-            <option>1</option><option>2</option><option>3</option><option>4</option>
-            <option>5</option><option>6</option><option>7</option><option>8</option>
-            <option>9</option><option>10</option>
-          </select>
-        </label>
-
-        <button class="btn-solid" type="submit" data-i18n="sendReply">Send reply on WhatsApp</button>
+        <div class="rsvp-actions">
+          <button class="btn-solid" type="submit" name="recipient" value="dhananjani" data-i18n="sendDhananjani">Send reply to Dhananjani via WhatsApp</button>
+          <button class="btn-solid" type="submit" name="recipient" value="mahesh" data-i18n="sendMahesh">Send reply to Mahesh via WhatsApp</button>
+        </div>
         <p class="form-note" data-i18n="formNote">Your reply will open in WhatsApp so you can send it directly to us.</p>
       </form>
 
@@ -362,10 +389,19 @@
     </defs>
   </svg>
 
+  <div class="lightbox" data-lightbox aria-hidden="true" role="dialog" aria-modal="true" aria-label="Photo viewer">
+    <button class="lightbox-close" type="button" data-lightbox-close aria-label="Close photo viewer">&times;</button>
+    <button class="lightbox-nav lightbox-prev" type="button" data-lightbox-prev aria-label="Previous photo">&#8249;</button>
+    <img class="lightbox-img" data-lightbox-img alt="" />
+    <button class="lightbox-nav lightbox-next" type="button" data-lightbox-next aria-label="Next photo">&#8250;</button>
+    <p class="lightbox-count" data-lightbox-count></p>
+  </div>
+
   <audio id="bgMusic" loop preload="none">
-    <source src="assets/music.mp3" type="audio/mpeg" />
+    <source src="assets/music.mp3?v=2" type="audio/mpeg" />
   </audio>
 
-  <script src="assets/app.js"></script>
+  <script src="assets/config.js?v=11"></script>
+  <script src="assets/app.js?v=11"></script>
 </body>
 </html>

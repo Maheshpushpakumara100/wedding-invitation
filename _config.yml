@@ -1,4 +1,6 @@
 # Keep the personal source image folder and docs out of the published site.
 exclude:
   - "Invitation card"
+  - Music
   - README.md
+  - apps-script

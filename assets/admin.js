@@ -1,27 +1,32 @@
 /* =========================================================
    Admin portal — Guest Link Manager
    ---------------------------------------------------------
-   NOTE: This passcode is a simple convenience lock only.
-   It is NOT real security (the page is static). Never put
-   sensitive information here.
-   Change the passcode below to your own.
+   Talks to the Google Apps Script backend in apps-script/Code.gs.
+   Sign in with the username + password configured there, then
+   add / edit / delete guests. Changes are saved to Google Sheets
+   and the live invitation reads them immediately.
    ========================================================= */
 
 (function () {
   "use strict";
 
-  var ADMIN_PASSCODE = "D&M2026";
+  var CONFIG = window.DM_CONFIG || {};
+  var API_URL = String(CONFIG.API_URL || "").trim();
 
-  var STORAGE_KEY = "dm_wedding_guests";
+  var TOKEN_KEY = "dm_admin_token";
+  var USER_KEY = "dm_admin_user";
   var BASE_KEY = "dm_wedding_base";
-  var SESSION_KEY = "dm_admin_ok";
   var COUPLE = { bride: "Dhananjani", groom: "Mahesh" };
 
   var state = {
     guests: [],
     base: "",
-    editingSlug: null
+    editingSlug: null,
+    username: ""
   };
+
+  var token = "";
+  try { token = sessionStorage.getItem(TOKEN_KEY) || ""; } catch (e) { token = ""; }
 
   var currentSuffix = randomSuffix();
   var displayTouched = false;
@@ -94,12 +99,6 @@
     return "https://wa.me/" + num + "?text=" + encodeURIComponent(text);
   }
 
-  function persist() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.guests));
-    } catch (e) { /* storage might be unavailable */ }
-  }
-
   function toast(message) {
     var el = $("toast");
     if (!el) return;
@@ -148,36 +147,166 @@
     });
   }
 
-  /* ---------- Gate ---------- */
-  var gate = $("gate");
-  var app = $("app");
+  /* ---------- API ---------- */
+  function errorText(code) {
+    switch (code) {
+      case "unauthorized": return "Your session expired. Please sign in again.";
+      case "invalid_credentials": return "Incorrect username or password.";
+      case "not_configured": return "The backend is not set up. Run setup() in Apps Script.";
+      case "bad_request": return "The request was not valid.";
+      case "unknown_action": return "The backend does not support that action.";
+      case "missing_slug": return "Missing guest code.";
+      case "not_found": return "Guest not found.";
+      default: return code ? String(code) : "Something went wrong.";
+    }
+  }
+
+  function apiCall(action, data) {
+    if (!API_URL) {
+      return Promise.reject(new Error("API URL is not configured. Add it in assets/config.js."));
+    }
+    var payload = { action: action, token: token };
+    if (data) {
+      Object.keys(data).forEach(function (key) { payload[key] = data[key]; });
+    }
+
+    return fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+      redirect: "follow"
+    }).then(function (res) {
+      if (!res.ok) throw new Error("Server error (" + res.status + ").");
+      return res.text().then(function (text) {
+        var json;
+        try {
+          json = JSON.parse(text);
+        } catch (e) {
+          throw new Error('Unexpected response. Make sure the Web App is deployed with access "Anyone".');
+        }
+        if (!json.ok) {
+          var err = new Error(errorText(json.error));
+          err.code = json.error || "error";
+          throw err;
+        }
+        return json;
+      });
+    });
+  }
+
+  function handleError(err) {
+    if (err && err.code === "unauthorized") {
+      clearSession();
+      showGate();
+      toast("Session expired. Please sign in again.");
+      return;
+    }
+    toast(err && err.message ? err.message : "Something went wrong.");
+  }
+
+  /* ---------- Session ---------- */
+  function saveSession(newToken, username) {
+    token = newToken || "";
+    state.username = username || "";
+    try {
+      sessionStorage.setItem(TOKEN_KEY, token);
+      sessionStorage.setItem(USER_KEY, state.username);
+    } catch (e) { /* ignore */ }
+  }
+
+  function clearSession() {
+    token = "";
+    state.username = "";
+    try {
+      sessionStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(USER_KEY);
+    } catch (e) { /* ignore */ }
+  }
+
+  function showGate() {
+    var gate = $("gate");
+    var app = $("app");
+    if (app) app.hidden = true;
+    if (gate) gate.style.display = "";
+    var user = $("gateUser");
+    if (user) user.focus();
+  }
 
   function unlock() {
+    var gate = $("gate");
+    var app = $("app");
     if (gate) gate.style.display = "none";
     if (app) app.hidden = false;
-    initAdmin();
+    var userEl = $("adminUser");
+    if (userEl) userEl.textContent = state.username || "admin";
+  }
+
+  /* ---------- State ---------- */
+  function applyState(guests, settings) {
+    state.guests = normalizeGuests(guests || []);
+
+    var savedBase = "";
+    try { savedBase = localStorage.getItem(BASE_KEY) || ""; } catch (e) { savedBase = ""; }
+    var serverBase = settings && settings.siteBase ? String(settings.siteBase) : "";
+    state.base = normalizeBase(serverBase || savedBase || CONFIG.SITE_BASE || deriveBase());
+
+    var baseInput = $("baseUrl");
+    if (baseInput) baseInput.value = state.base;
+    updateBaseHint();
+    render();
+  }
+
+  function updateBaseHint() {
+    var hint = $("baseSaved");
+    if (!hint) return;
+    hint.textContent = state.base
+      ? "Guest links start with " + state.base
+      : "No site link set yet. Guest links will show only the code (?g=...).";
+  }
+
+  /* ---------- Gate ---------- */
+  function setGateBusy(busy) {
+    var btn = $("gateSubmit");
+    if (btn) {
+      btn.disabled = busy;
+      btn.textContent = busy ? "Signing in…" : "Sign in";
+    }
   }
 
   function bindGate() {
-    if (sessionStorage.getItem(SESSION_KEY) === "1") {
-      unlock();
-      return;
-    }
     var form = $("gateForm");
-    var input = $("gatePass");
-    var error = $("gateError");
     if (!form) return;
     form.addEventListener("submit", function (event) {
       event.preventDefault();
-      if (input.value === ADMIN_PASSCODE) {
-        sessionStorage.setItem(SESSION_KEY, "1");
-        error.textContent = "";
-        unlock();
-      } else {
-        error.textContent = "Incorrect passcode. Please try again.";
-        input.value = "";
-        input.focus();
+
+      var errorEl = $("gateError");
+      var user = ($("gateUser") && $("gateUser").value || "").trim();
+      var pass = $("gatePass") && $("gatePass").value || "";
+
+      if (!API_URL) {
+        if (errorEl) errorEl.textContent = "Backend not configured: add API_URL in assets/config.js";
+        return;
       }
+      if (!user || !pass) {
+        if (errorEl) errorEl.textContent = "Enter your username and password.";
+        return;
+      }
+
+      if (errorEl) errorEl.textContent = "";
+      setGateBusy(true);
+
+      apiCall("login", { username: user, password: pass })
+        .then(function (data) {
+          saveSession(data.token, data.username);
+          applyState(data.guests, data.settings);
+          unlock();
+        })
+        .catch(function (err) {
+          if (errorEl) errorEl.textContent = err && err.message ? err.message : "Could not sign in.";
+          var passEl = $("gatePass");
+          if (passEl) { passEl.value = ""; passEl.focus(); }
+        })
+        .then(function () { setGateBusy(false); });
     });
   }
 
@@ -271,11 +400,14 @@
 
       actions.appendChild(miniButton("Delete", "danger", function () {
         if (!window.confirm("Remove " + guest.display + " from the guest list?")) return;
-        state.guests = state.guests.filter(function (g) { return g.slug !== guest.slug; });
-        if (state.editingSlug === guest.slug) resetForm();
-        persist();
-        render();
-        toast("Guest removed");
+        apiCall("deleteGuest", { slug: guest.slug })
+          .then(function (res) {
+            state.guests = normalizeGuests(res.guests);
+            if (state.editingSlug === guest.slug) resetForm();
+            render();
+            toast("Guest removed");
+          })
+          .catch(handleError);
       }));
 
       tdActions.appendChild(actions);
@@ -296,21 +428,7 @@
     return btn;
   }
 
-  /* ---------- Data loading ---------- */
-  function loadFromServer() {
-    return fetch("data/guests.json", { cache: "no-store" })
-      .then(function (res) { return res.ok ? res.json() : null; })
-      .then(function (data) {
-        var list = data && Array.isArray(data.guests) ? data.guests : [];
-        state.guests = normalizeGuests(list);
-        persist();
-        render();
-      })
-      .catch(function () {
-        render();
-      });
-  }
-
+  /* ---------- Export / import ---------- */
   function exportGuests() {
     var payload = {
       couple: COUPLE,
@@ -333,132 +451,180 @@
     a.click();
     document.body.removeChild(a);
     window.setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
-    toast("guests.json downloaded — upload it to data/ in your repo");
+    toast("guests.json downloaded (also used as the offline fallback)");
   }
 
-  /* ---------- Init ---------- */
-  var initialized = false;
-
-  function initAdmin() {
-    if (initialized) return;
-    initialized = true;
-
-    var savedBase = localStorage.getItem(BASE_KEY);
-    state.base = savedBase !== null ? savedBase : deriveBase();
-    var baseInput = $("baseUrl");
-    if (baseInput) baseInput.value = state.base;
-
-    /* Site base URL */
-    $("saveBase").addEventListener("click", function () {
-      state.base = normalizeBase(baseInput.value);
-      baseInput.value = state.base;
-      localStorage.setItem(BASE_KEY, state.base);
-      $("baseSaved").textContent = state.base
-        ? "Saved. Guest links now start with " + state.base
-        : "No site link set yet. Guest links will show only the code (?g=...).";
-      render();
-      toast("Site link saved");
-    });
-
-    /* Guest form bindings */
-    $("gSalutation").addEventListener("change", autoFromName);
-    $("gName").addEventListener("input", autoFromName);
-    $("gDisplay").addEventListener("input", function () { displayTouched = true; });
-    $("gSlug").addEventListener("input", function () { slugTouched = true; });
-    $("cancelEdit").addEventListener("click", resetForm);
-
-    $("guestForm").addEventListener("submit", function (event) {
-      event.preventDefault();
-
-      var salutation = $("gSalutation").value.trim();
-      var name = $("gName").value.trim();
-      var display = $("gDisplay").value.trim() || buildDisplay(salutation, name);
-      var phone = $("gPhone").value.trim();
-      var slug = slugify($("gSlug").value) || (name ? slugify(name) + "-" + randomSuffix() : "");
-
-      if (!name && !display) {
-        toast("Please enter a guest name");
-        $("gName").focus();
-        return;
-      }
-      if (!display) {
-        toast("Please enter a display name");
-        $("gDisplay").focus();
-        return;
-      }
-      if (!slug) {
-        toast("Please enter a guest link code");
-        $("gSlug").focus();
-        return;
-      }
-
-      var duplicate = state.guests.some(function (g) {
-        return g.slug === slug && g.slug !== state.editingSlug;
+  /* ---------- App bindings ---------- */
+  function bindApp() {
+    var saveBase = $("saveBase");
+    if (saveBase) {
+      saveBase.addEventListener("click", function () {
+        var baseInput = $("baseUrl");
+        state.base = normalizeBase(baseInput.value);
+        baseInput.value = state.base;
+        try { localStorage.setItem(BASE_KEY, state.base); } catch (e) { /* ignore */ }
+        updateBaseHint();
+        render();
+        apiCall("saveSettings", { settings: { siteBase: state.base } })
+          .then(function () { toast("Site link saved"); })
+          .catch(function (err) { toast("Saved locally only: " + (err.message || "could not reach server")); });
       });
-      if (duplicate) {
-        toast("That link code is already used by another guest");
-        $("gSlug").focus();
-        return;
-      }
+    }
 
-      var guest = { slug: slug, salutation: salutation, name: name, display: display, phone: phone };
+    if ($("gSalutation")) {
+      $("gSalutation").addEventListener("change", autoFromName);
+      $("gName").addEventListener("input", autoFromName);
+      $("gDisplay").addEventListener("input", function () { displayTouched = true; });
+      $("gSlug").addEventListener("input", function () { slugTouched = true; });
+      $("cancelEdit").addEventListener("click", resetForm);
+    }
 
-      if (state.editingSlug) {
-        var index = state.guests.findIndex(function (g) { return g.slug === state.editingSlug; });
-        if (index > -1) state.guests[index] = guest;
-        else state.guests.push(guest);
-        toast("Guest updated");
-      } else {
-        state.guests.push(guest);
-        toast("Guest added");
-      }
+    if ($("guestForm")) {
+      $("guestForm").addEventListener("submit", function (event) {
+        event.preventDefault();
 
-      persist();
-      render();
-      resetForm();
-    });
+        var salutation = $("gSalutation").value.trim();
+        var name = $("gName").value.trim();
+        var display = $("gDisplay").value.trim() || buildDisplay(salutation, name);
+        var phone = $("gPhone").value.trim();
+        var slug = slugify($("gSlug").value) || (name ? slugify(name) + "-" + randomSuffix() : "");
 
-    /* Toolbar */
-    $("reloadBtn").addEventListener("click", function () {
-      if (!window.confirm("Reload the guest list from data/guests.json? Any unsaved changes in this browser will be replaced.")) return;
-      loadFromServer().then(function () { toast("Guest list reloaded"); });
-    });
-
-    $("exportBtn").addEventListener("click", exportGuests);
-
-    $("importInput").addEventListener("change", function (event) {
-      var file = event.target.files && event.target.files[0];
-      if (!file) return;
-      var reader = new FileReader();
-      reader.onload = function () {
-        try {
-          var data = JSON.parse(reader.result);
-          var list = Array.isArray(data) ? data : (data.guests || []);
-          state.guests = normalizeGuests(list);
-          persist();
-          render();
-          toast("Imported " + state.guests.length + " guest(s)");
-        } catch (err) {
-          toast("That file is not valid guest JSON");
+        if (!name && !display) {
+          toast("Please enter a guest name");
+          $("gName").focus();
+          return;
         }
-        event.target.value = "";
-      };
-      reader.readAsText(file);
-    });
+        if (!slug) {
+          toast("Please enter a guest link code");
+          $("gSlug").focus();
+          return;
+        }
 
-    /* Load guests: prefer this browser's working copy, else the published file */
-    var stored = localStorage.getItem(STORAGE_KEY);
-    if (stored !== null) {
-      try {
-        state.guests = normalizeGuests(JSON.parse(stored));
-      } catch (e) {
-        state.guests = [];
-      }
-      render();
-    } else {
-      loadFromServer();
+        var guest = { slug: slug, salutation: salutation, name: name, display: display, phone: phone };
+        var editing = state.editingSlug;
+        var action = editing ? "updateGuest" : "addGuest";
+        var data = editing ? { originalSlug: editing, guest: guest } : { guest: guest };
+
+        var saveBtn = $("saveGuest");
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Saving…";
+
+        apiCall(action, data)
+          .then(function (res) {
+            state.guests = normalizeGuests(res.guests);
+            render();
+            resetForm();
+            toast(editing ? "Guest updated" : "Guest added");
+          })
+          .catch(handleError)
+          .then(function () {
+            saveBtn.disabled = false;
+            saveBtn.textContent = state.editingSlug ? "Save changes" : "Add guest";
+          });
+      });
+    }
+
+    if ($("reloadBtn")) {
+      $("reloadBtn").addEventListener("click", function () {
+        apiCall("listGuests")
+          .then(function (res) {
+            state.guests = normalizeGuests(res.guests);
+            render();
+            toast("Guest list refreshed");
+          })
+          .catch(handleError);
+      });
+    }
+
+    if ($("exportBtn")) $("exportBtn").addEventListener("click", exportGuests);
+
+    if ($("importInput")) {
+      $("importInput").addEventListener("change", function (event) {
+        var file = event.target.files && event.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          try {
+            var parsed = JSON.parse(reader.result);
+            var list = Array.isArray(parsed) ? parsed : (parsed.guests || []);
+            apiCall("replaceGuests", { guests: list })
+              .then(function (res) {
+                state.guests = normalizeGuests(res.guests);
+                render();
+                toast("Imported " + state.guests.length + " guest(s)");
+              })
+              .catch(handleError);
+          } catch (err) {
+            toast("That file is not valid guest JSON");
+          }
+          event.target.value = "";
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    if ($("logoutBtn")) {
+      $("logoutBtn").addEventListener("click", function () {
+        apiCall("logout")
+          .catch(function () { /* ignore */ })
+          .then(function () {
+            clearSession();
+            showGate();
+            toast("Signed out");
+          });
+      });
+    }
+
+    if ($("pwForm")) {
+      $("pwForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+        var current = $("currentPw").value;
+        var next = $("newPw").value;
+        var confirm = $("confirmPw").value;
+
+        if (next.length < 6) { toast("New password must be at least 6 characters"); return; }
+        if (next !== confirm) { toast("New passwords do not match"); return; }
+
+        apiCall("changePassword", { currentPassword: current, newPassword: next })
+          .then(function () {
+            $("pwForm").reset();
+            toast("Password updated");
+          })
+          .catch(handleError);
+      });
     }
   }
 
-  bindGate();
+  /* ---------- Boot ---------- */
+  function boot() {
+    bindGate();
+    bindApp();
+
+    if (!API_URL) {
+      var errorEl = $("gateError");
+      if (errorEl) {
+        errorEl.textContent = "Backend not configured: add your Apps Script /exec URL in assets/config.js";
+      }
+      return;
+    }
+
+    if (!token) return;
+
+    apiCall("ping")
+      .then(function (data) {
+        state.username = data.username || "";
+        return apiCall("listGuests");
+      })
+      .then(function (res) {
+        state.username = state.username || "admin";
+        applyState(res.guests, res.settings);
+        unlock();
+      })
+      .catch(function () {
+        clearSession();
+        showGate();
+      });
+  }
+
+  boot();
 })();

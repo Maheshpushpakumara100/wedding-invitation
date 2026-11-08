@@ -9,25 +9,26 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/style.css" />
-  <link rel="stylesheet" href="assets/admin.css" />
+  <link rel="stylesheet" href="assets/style.css?v=11" />
+  <link rel="stylesheet" href="assets/admin.css?v=11" />
 </head>
 <body class="admin-page">
 
   <div class="admin-shell">
 
-    <!-- PASSCODE GATE -->
+    <!-- LOGIN GATE -->
     <div class="admin-gate" id="gate">
       <div class="gate-card">
         <p class="eyebrow">Private area</p>
         <h1 class="gate-title">Guest Link Manager</h1>
-        <p class="gate-text">Enter the admin passcode to manage the guest list and generate personal invitation links.</p>
-        <form id="gateForm" class="gate-form">
-          <input type="password" id="gatePass" placeholder="Passcode" autocomplete="current-password" required />
-          <button class="btn-solid" type="submit">Enter</button>
+        <p class="gate-text">Sign in with your admin username and password to manage the guest list and generate personal invitation links.</p>
+        <form id="gateForm" class="gate-form gate-form-stack">
+          <input type="text" id="gateUser" placeholder="Username" autocomplete="username" required />
+          <input type="password" id="gatePass" placeholder="Password" autocomplete="current-password" required />
+          <button class="btn-solid" type="submit" id="gateSubmit">Sign in</button>
         </form>
         <p class="gate-error" id="gateError"></p>
-        <p class="gate-note">Default passcode: <strong>D&amp;M2026</strong> — change it in <code>assets/admin.js</code>.</p>
+        <p class="gate-note">Accounts are validated by your Google Apps Script backend. Set credentials in <code>apps-script/Code.gs</code>.</p>
       </div>
     </div>
 
@@ -50,6 +51,33 @@
           <button class="btn-outline small" id="saveBase" type="button">Save</button>
         </div>
         <p class="hint" id="baseSaved"></p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">Account</h2>
+          <button class="btn-outline small" id="logoutBtn" type="button">Sign out</button>
+        </div>
+        <p class="panel-help">Signed in as <strong id="adminUser">admin</strong>. The guest list is stored in Google Sheets.</p>
+        <form id="pwForm" class="guest-form password-form" novalidate>
+          <div class="grid-3">
+            <label class="field">
+              <span>Current password</span>
+              <input type="password" id="currentPw" autocomplete="current-password" />
+            </label>
+            <label class="field">
+              <span>New password</span>
+              <input type="password" id="newPw" autocomplete="new-password" />
+            </label>
+            <label class="field">
+              <span>Confirm new password</span>
+              <input type="password" id="confirmPw" autocomplete="new-password" />
+            </label>
+          </div>
+          <div class="row form-actions">
+            <button class="btn-outline" type="submit" id="changePwBtn">Change password</button>
+          </div>
+        </form>
       </section>
 
       <section class="panel">
@@ -97,8 +125,8 @@
         <div class="panel-head">
           <h2 class="panel-title">Guests <span class="count-badge" id="guestCount">0</span></h2>
           <div class="row wrap">
-            <button class="btn-outline small" id="reloadBtn" type="button">Reload guests.json</button>
-            <button class="btn-outline small" id="exportBtn" type="button">Download guests.json</button>
+            <button class="btn-outline small" id="reloadBtn" type="button">Refresh</button>
+            <button class="btn-outline small" id="exportBtn" type="button">Download backup JSON</button>
             <label class="btn-outline small import-label">
               Import JSON
               <input type="file" id="importInput" accept="application/json" hidden />
@@ -107,8 +135,8 @@
         </div>
 
         <div class="publish-note">
-          After making changes, click <strong>Download guests.json</strong>, then replace
-          <code>data/guests.json</code> in your GitHub repository. The live site updates in about a minute.
+          Changes save straight to your Google Sheet, so the live invitation updates immediately.
+          The downloaded JSON is only a backup and the offline fallback for <code>data/guests.json</code>.
         </div>
 
         <div class="table-wrap">
@@ -130,6 +158,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/admin.js"></script>
+  <script src="assets/config.js?v=11"></script>
+  <script src="assets/admin.js?v=11"></script>
 </body>
 </html>

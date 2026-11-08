@@ -10,6 +10,8 @@
 
   var WEDDING_ISO = "2026-12-07T08:30:00+05:30";
   var RSVP_WHATSAPP = "94717979436"; // Mahesh — primary RSVP number
+  var RSVP_WHATSAPP_DHANANJANI = "94715534712"; // Dhananjani
+  var API_URL = String((window.DM_CONFIG && window.DM_CONFIG.API_URL) || "").trim();
 
   /* ---------- Translations ---------- */
   var I18N = {
@@ -49,7 +51,9 @@
       dateShort: "07 December 2026",
       detail1Text: "The wedding celebration begins at 08.30 AM and continues until 04.00 PM.",
       poruwaTitle: "Poruwa Ceremony",
-      detail2Text: "The traditional Poruwa ceremony will be held at 09.48 AM.",
+      detail2Text: "The traditional Poruwa ceremony will be held from 09.48 AM to 10.24 AM.",
+      lunchTitle: "Lunch Buffet",
+      lunchText: "The lunch buffet opens at 12.15 PM.",
       venueKicker: "The Venue",
       venueName: "Tranquil Hotel",
       detail3Text: "Naranwala, Waliweriya. We look forward to celebrating with you there.",
@@ -58,6 +62,8 @@
       venueLabel: "Where we celebrate",
       venueTitle: "The Venue",
       venueAddress: "Naranwala, Waliweriya",
+      momentsLabel: "Our moments",
+      momentsTitle: "Little memories",
       rsvpLabel: "Kindly reply",
       rsvpTitle: "Will you join us?",
       rsvpIntro: "It would mean so much to have you with us. Please let us know if you can join the celebration.",
@@ -66,8 +72,8 @@
       willAttend: "Will you attend?",
       joyfully: "Joyfully accepts",
       regretfully: "Regretfully declines",
-      numGuests: "Number of guests",
-      sendReply: "Send reply on WhatsApp",
+      sendDhananjani: "Send reply to Dhananjani via WhatsApp",
+      sendMahesh: "Send reply to Mahesh via WhatsApp",
       formNote: "Your reply will open in WhatsApp so you can send it directly to us.",
       rsvpContact: "RSVP & Contact",
       personMahesh: "Mahesh",
@@ -118,7 +124,9 @@
       dateShort: "2026 දෙසැම්බර් 07",
       detail1Text: "විවාහ මංගලෝත්සවය පෙ.ව. 08.30 ට ආරම්භ වී ප.ව. 04.00 දක්වා පැවැත්වේ.",
       poruwaTitle: "පොරුවා මංගල්‍යය",
-      detail2Text: "සාම්ප්‍රදායික පොරුවා මංගල්‍යය පෙ.ව. 09.48 ට පැවැත්වේ.",
+      detail2Text: "සාම්ප්‍රදායික පොරුවා මංගල්‍යය පෙ.ව. 09.48 සිට පෙ.ව. 10.24 දක්වා පැවැත්වේ.",
+      lunchTitle: "දහවල් භෝජන සංග්‍රහය",
+      lunchText: "දහවල් භෝජන සංග්‍රහය ප.ව. 12.15 ට ආරම්භ වේ.",
       venueKicker: "ස්ථානය",
       venueName: "ට්‍රැන්ක්විල් හෝටලය",
       detail3Text: "නාරන්වල, වලිවේරිය. ඔබ සමඟ එහිදී සමරන්න අපි බලා සිටිමු.",
@@ -127,6 +135,8 @@
       venueLabel: "අපි සමරන ස්ථානය",
       venueTitle: "ස්ථානය",
       venueAddress: "නාරන්වල, වලිවේරිය",
+      momentsLabel: "අපගේ මොහොතවල්",
+      momentsTitle: "අපගේ මතක සටහන්",
       rsvpLabel: "කරුණාකර පිළිතුරු දෙන්න",
       rsvpTitle: "ඔබ අප හා එක්වේද?",
       rsvpIntro: "ඔබ අප සමඟ සිටීම අපට ඉතා වැදගත්. ඔබට මංගලෝත්සවයට සහභාගී විය හැකිදැයි කරුණාකර අපට දන්වන්න.",
@@ -135,8 +145,8 @@
       willAttend: "ඔබ සහභාගී වේද?",
       joyfully: "සතුටින් සහභාගී වෙමි",
       regretfully: "කණගාටුවෙන් වැළකී සිටිමි",
-      numGuests: "අමුත්තන් ගණන",
-      sendReply: "WhatsApp හරහා පිළිතුරු යවන්න",
+      sendDhananjani: "ධනංජනීට WhatsApp හරහා පිළිතුරු යවන්න",
+      sendMahesh: "මහේෂ්ට WhatsApp හරහා පිළිතුරු යවන්න",
       formNote: "ඔබගේ පිළිතුර WhatsApp හි විවෘත වන අතර, එය අපට සෘජුවම යැවිය හැක.",
       rsvpContact: "පිළිතුරු සහ සම්බන්ධතා",
       personMahesh: "මහේෂ්",
@@ -183,7 +193,7 @@
   var secondsEl = document.getElementById("seconds");
   var noteEl = document.getElementById("countdownNote");
   var form = document.getElementById("rsvpForm");
-  var countEl = document.getElementById("rsvpCount");
+
   var calBtn = document.getElementById("addCalendar");
 
   var guestDisplay = "";
@@ -274,11 +284,7 @@
   var videoTimer = 0;
 
   function startMusicSafe() {
-    try {
-      if (localStorage.getItem("dm_music") !== "off") playMusic();
-    } catch (e) {
-      playMusic();
-    }
+    playMusic();
   }
 
   function stopIntroVideo() {
@@ -312,6 +318,7 @@
   }
 
   function playIntroVideo() {
+    startMusicSafe();
     introVideo.classList.add("is-active");
     introVideo.setAttribute("aria-hidden", "false");
 
@@ -319,7 +326,6 @@
     function finish() {
       if (finished) return;
       finished = true;
-      startMusicSafe();
       revealInvitation();
     }
 
@@ -394,21 +400,67 @@
     applyGuestName(directName);
   }
 
-  if (slug) {
+  function useGuest(guest) {
+    if (!guest) return;
+    var display = guest.display || [guest.salutation, guest.name].filter(Boolean).join(" ");
+    applyGuestName(display);
+  }
+
+  function lookupFromStatic(code) {
     fetch("data/guests.json", { cache: "no-store" })
       .then(function (res) { return res.ok ? res.json() : null; })
       .then(function (data) {
         if (!data || !Array.isArray(data.guests)) return;
         var found = data.guests.filter(function (guest) {
-          return String(guest.slug).toLowerCase() === slug.toLowerCase();
+          return String(guest.slug).toLowerCase() === code.toLowerCase();
         })[0];
-        if (found) {
-          applyGuestName(found.display || [found.salutation, found.name].filter(Boolean).join(" "));
-        }
+        if (found) useGuest(found);
       })
       .catch(function () {
         /* Opened from file:// or guests.json missing — silently fall back */
       });
+  }
+
+  /* Apps Script replies as JSONP here, so this works even when
+     cross-origin fetch is blocked. Falls back to data/guests.json. */
+  function lookupFromApi(code) {
+    var cbName = "__dmGuest_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+    var script = document.createElement("script");
+    var done = false;
+
+    function cleanup() {
+      if (done) return;
+      done = true;
+      window[cbName] = function () {};
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    var timer = window.setTimeout(function () {
+      cleanup();
+      lookupFromStatic(code);
+    }, 8000);
+
+    window[cbName] = function (data) {
+      window.clearTimeout(timer);
+      cleanup();
+      if (data && data.ok && data.guest) useGuest(data.guest);
+      else lookupFromStatic(code);
+    };
+
+    script.onerror = function () {
+      window.clearTimeout(timer);
+      cleanup();
+      lookupFromStatic(code);
+    };
+
+    script.src = API_URL + (API_URL.indexOf("?") > -1 ? "&" : "?") +
+      "action=guest&slug=" + encodeURIComponent(code) + "&callback=" + cbName;
+    document.body.appendChild(script);
+  }
+
+  if (slug) {
+    if (API_URL) lookupFromApi(slug);
+    else lookupFromStatic(slug);
   }
 
   /* ---------- Countdown ---------- */
@@ -502,7 +554,8 @@
       var name = (nameInput && nameInput.value.trim()) || guestDisplay || (currentLang === "si" ? "අමුත්තෙක්" : "A guest");
       var attendInput = form.querySelector('input[name="attend"]:checked');
       var attend = attendInput ? attendInput.value : "joyfully accept";
-      var count = countEl ? countEl.value : "1";
+      var recipient = event.submitter ? event.submitter.value : "mahesh";
+      var phone = recipient === "dhananjani" ? RSVP_WHATSAPP_DHANANJANI : RSVP_WHATSAPP;
       var message;
 
       if (currentLang === "si") {
@@ -510,17 +563,15 @@
           "ආයුබෝවන්, මම " + name + ". " +
           "ධනංජනී සහ මහේෂ් ගේ විවාහ මංගල්‍යයට මගේ ආරාධනය " +
           (attend === "joyfully accept" ? "සතුටින් පිළිගනිමි" : "කණගාටුවෙන් ප්‍රතික්ෂේප කරමි") +
-          ". 2026 දෙසැම්බර් 07 සඳුදා, ට්‍රැන්ක්විල් හෝටලය, නාරන්වල, වලිවේරිය. " +
-          "අමුත්තන් ගණන: " + count + ".";
+          ". 2026 දෙසැම්බර් 07 සඳුදා, ට්‍රැන්ක්විල් හෝටලය, නාරන්වල, වලිවේරිය.";
       } else {
         message =
           "Hello, this is " + name + ". " +
           "I " + attend + " the invitation to the wedding of Dhananjani & Mahesh " +
-          "on Monday, 07 December 2026 at Tranquil Hotel, Naranwala, Waliweriya. " +
-          "Number of guests: " + count + ".";
+          "on Monday, 07 December 2026 at Tranquil Hotel, Naranwala, Waliweriya.";
       }
 
-      var url = "https://wa.me/" + RSVP_WHATSAPP + "?text=" + encodeURIComponent(message);
+      var url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
       window.open(url, "_blank", "noopener");
     });
   }
@@ -610,14 +661,163 @@
     musicBtn.addEventListener("click", function () {
       if (!music) return;
       if (music.paused) {
-        try { localStorage.setItem("dm_music", "on"); } catch (e) { /* ignore */ }
         playMusic();
       } else {
         music.pause();
-        try { localStorage.setItem("dm_music", "off"); } catch (e) { /* ignore */ }
       }
     });
   }
+
+  /* ---------- Photo slider + lightbox ---------- */
+  (function initAlbum() {
+    var slider = document.querySelector("[data-album]");
+    if (!slider) return;
+    var track = slider.querySelector("[data-album-track]");
+    var viewport = slider.querySelector("[data-album-viewport]");
+    var prevBtn = slider.querySelector("[data-album-prev]");
+    var nextBtn = slider.querySelector("[data-album-next]");
+    var dotsWrap = slider.querySelector("[data-album-dots]");
+    if (!track) return;
+
+    var slides = Array.prototype.slice.call(track.querySelectorAll(".album-slide"));
+    var total = slides.length;
+    if (!total) return;
+
+    var index = 0;
+    var dots = [];
+
+    if (dotsWrap) {
+      for (var i = 0; i < total; i++) {
+        var dot = document.createElement("button");
+        dot.type = "button";
+        dot.className = "album-dot";
+        dot.setAttribute("data-album-dot", String(i));
+        dot.setAttribute("aria-label", "Go to photo " + (i + 1));
+        dotsWrap.appendChild(dot);
+        dots.push(dot);
+      }
+    }
+
+    function render() {
+      track.style.transform = "translateX(" + (-index * 100) + "%)";
+      for (var i = 0; i < total; i++) {
+        var slide = slides[i];
+        slide.setAttribute("aria-hidden", i === index ? "false" : "true");
+        var openBtn = slide.querySelector("[data-album-open]");
+        if (openBtn) openBtn.tabIndex = i === index ? 0 : -1;
+        if (dots[i]) {
+          dots[i].classList.toggle("is-active", i === index);
+          dots[i].setAttribute("aria-current", i === index ? "true" : "false");
+        }
+      }
+    }
+
+    function go(n) {
+      index = (n % total + total) % total;
+      render();
+    }
+
+    if (prevBtn) prevBtn.addEventListener("click", function () { go(index - 1); });
+    if (nextBtn) nextBtn.addEventListener("click", function () { go(index + 1); });
+    if (dotsWrap) {
+      dotsWrap.addEventListener("click", function (e) {
+        var target = e.target.closest("[data-album-dot]");
+        if (target) go(parseInt(target.getAttribute("data-album-dot"), 10));
+      });
+    }
+
+    if (viewport) {
+      var startX = null;
+      var deltaX = 0;
+      viewport.addEventListener("touchstart", function (e) {
+        if (e.touches.length !== 1) return;
+        startX = e.touches[0].clientX;
+        deltaX = 0;
+      }, { passive: true });
+      viewport.addEventListener("touchmove", function (e) {
+        if (startX === null) return;
+        deltaX = e.touches[0].clientX - startX;
+      }, { passive: true });
+      viewport.addEventListener("touchend", function () {
+        if (startX === null) return;
+        if (Math.abs(deltaX) > 40) go(index + (deltaX < 0 ? 1 : -1));
+        startX = null;
+      });
+      viewport.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowLeft") { e.preventDefault(); go(index - 1); }
+        else if (e.key === "ArrowRight") { e.preventDefault(); go(index + 1); }
+      });
+    }
+
+    render();
+
+    /* ---------- Lightbox ---------- */
+    var lb = document.querySelector("[data-lightbox]");
+    if (!lb) return;
+    var lbImg = lb.querySelector("[data-lightbox-img]");
+    var lbCount = lb.querySelector("[data-lightbox-count]");
+    var lbIndex = 0;
+    var lastFocus = null;
+
+    function showLightbox(i) {
+      lbIndex = (i % total + total) % total;
+      var img = slides[lbIndex].querySelector("img");
+      if (!img) return;
+      var wasOpen = lb.classList.contains("is-open");
+      if (!wasOpen) lastFocus = document.activeElement;
+      if (lbImg) {
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || "";
+      }
+      if (lbCount) lbCount.textContent = (lbIndex + 1) + " / " + total;
+      lb.classList.add("is-open");
+      lb.setAttribute("aria-hidden", "false");
+      document.body.classList.add("lightbox-open");
+      if (!wasOpen) {
+        var closeBtn = lb.querySelector("[data-lightbox-close]");
+        if (closeBtn && closeBtn.focus) closeBtn.focus();
+      }
+    }
+
+    function hideLightbox() {
+      lb.classList.remove("is-open");
+      lb.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("lightbox-open");
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+    }
+
+    track.addEventListener("click", function (e) {
+      var openTarget = e.target.closest("[data-album-open]");
+      if (!openTarget) return;
+      var slide = openTarget.closest(".album-slide");
+      var i = slides.indexOf(slide);
+      showLightbox(i < 0 ? index : i);
+    });
+
+    lb.addEventListener("click", function (e) {
+      if (e.target === lb || e.target.closest("[data-lightbox-close]")) { hideLightbox(); return; }
+      if (e.target.closest("[data-lightbox-prev]")) { showLightbox(lbIndex - 1); return; }
+      if (e.target.closest("[data-lightbox-next]")) { showLightbox(lbIndex + 1); }
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (!lb.classList.contains("is-open")) return;
+      if (e.key === "Escape") { hideLightbox(); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); showLightbox(lbIndex - 1); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); showLightbox(lbIndex + 1); }
+    });
+
+    var lbStartX = null;
+    lb.addEventListener("touchstart", function (e) {
+      if (e.touches.length === 1) lbStartX = e.touches[0].clientX;
+    }, { passive: true });
+    lb.addEventListener("touchend", function (e) {
+      if (lbStartX === null) return;
+      var endX = e.changedTouches[0].clientX;
+      if (Math.abs(endX - lbStartX) > 50) showLightbox(lbIndex + (endX < lbStartX ? 1 : -1));
+      lbStartX = null;
+    });
+  })();
 
   /* ---------- Initialise language ---------- */
   applyLanguage(currentLang);

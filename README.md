@@ -7,7 +7,8 @@ A floral‑elegant, single‑page digital wedding card with:
 - Wedding details, Poruwa ceremony time and venue map link
 - "Add to Calendar" button (downloads an `.ics` file)
 - WhatsApp RSVP form (opens a ready‑made message)
-- A small **Guest Link Manager** admin page to add guests, generate links and export the guest file
+- A **Guest Link Manager** admin page (username + password) backed by **Google Sheets + Google Apps Script**
+- Guest names are read live from the Sheet, so new guests work instantly
 - A full-screen intro video that plays after the guest taps **Open Invitation**
 - 100% free hosting on **GitHub Pages**
 
@@ -19,16 +20,23 @@ A floral‑elegant, single‑page digital wedding card with:
 index.html            → the invitation card (guests see this)
 admin.html            → the private Guest Link Manager
 assets/
+  config.js           → API URL + site address (edit this)
   style.css           → card styling (floral theme)
   app.js              → countdown, personalisation, RSVP, calendar
   admin.css           → admin page styling
-  admin.js            → admin logic
+  admin.js            → admin logic (talks to Apps Script)
+apps-script/
+  Code.gs              → Google Apps Script backend (paste into script.google.com)
+  appsscript.json      → manifest for the Apps Script project
 data/
-  guests.json         → the published guest list
+  guests.json         → offline fallback guest list
 Videos/
   invitation-intro.mp4 → intro video played after "Open Invitation"
 Invitation card/      → your original photo + link.txt (not used by the site)
 ```
+
+> The live guest list lives in a **Google Sheet**. `data/guests.json` is only
+> used if the Apps Script backend is unreachable or not configured yet.
 
 ---
 
@@ -53,7 +61,73 @@ Then open:
 > Tip: add `?skip=1` to any link (e.g. `http://localhost:8000/?skip=1`) to skip the
 > intro video and go straight to the invitation.
 
-**Admin passcode:** `D&M2026` (change it in `assets/admin.js`).
+**Admin login:** username + password configured in the Apps Script backend
+(default first-run `admin` / `D&M2026`). Complete the backend setup below first.
+
+---
+
+## 2b. Connect the Google Sheets backend (one-time setup)
+
+The admin login, guest list and guest lookup all run through a free
+**Google Apps Script** web app. You only do this once.
+
+### Step 1 — Create the Apps Script project
+1. Open <https://script.google.com> and sign in with the Google account that
+   should own the guest list.
+2. Click **New project**.
+3. Open `apps-script/Code.gs` from this folder, copy everything, and paste it
+   over the default code in the editor.
+4. Near the top, change these two lines to your own credentials:
+   ```js
+   var DEFAULT_ADMIN_USERNAME = 'admin';
+   var DEFAULT_ADMIN_PASSWORD = 'D&M2026';
+   ```
+5. Click **Save** (the disk icon).
+
+### Step 2 — Run the setup function
+1. In the function dropdown (top toolbar), choose **setup**.
+2. Click **Run**. Approve the Google permissions when prompted.
+3. A new Google Sheet called **D&M Wedding Guest List** is created with two
+   tabs: `Guests` and `Settings`. Its ID is saved automatically.
+   (Check **View → Logs** to see the Sheet URL.)
+
+### Step 3 — Deploy as a Web App
+1. Click **Deploy → New deployment**.
+2. Select type **Web app**.
+3. Set:
+   - **Description:** Wedding API
+   - **Execute as:** Me
+   - **Who has access:** Anyone
+4. Click **Deploy**, then copy the **Web app URL** (ends in `/exec`).
+
+### Step 4 — Point the site at the API
+1. Open `assets/config.js`.
+2. Paste the `/exec` URL into `API_URL`:
+   ```js
+   window.DM_CONFIG = {
+     API_URL: "https://script.google.com/macros/s/AKfy.../exec",
+     SITE_BASE: "https://username.github.io/wedding/"
+   };
+   ```
+3. Commit/upload the change.
+
+### Step 5 — Sign in
+1. Open `admin.html` (locally or on your live site).
+2. Sign in with the username/password from Step 1.
+3. Add guests — they save straight to the Google Sheet.
+4. Use **Account → Change password** after the first login.
+
+### Notes
+- **Test the API:** open `YOUR_URL/exec?action=health` in a browser. You should
+  see JSON like `{"ok":true,"service":"dm-wedding-api",...}`.
+- **After editing the Apps Script code**, create a new version:
+  **Deploy → Manage deployments → Edit → Version: New version → Deploy**.
+  The URL stays the same.
+- **Privacy:** the Sheet is private to your Google account. The public API only
+  returns the display name for an exact guest code; it never exposes phones or
+  the full list.
+- **If admin shows "Failed to fetch":** confirm the deployment access is
+  **Anyone**, and that `API_URL` ends in `/exec` (not `/dev`).
 
 ---
 
@@ -99,7 +173,7 @@ You need a free GitHub account: <https://github.com/signup>
 
 ### Step 4 — Connect the admin page to your live site
 1. Open `https://USERNAME.github.io/wedding/admin.html`.
-2. Enter the passcode `D&M2026`.
+2. Sign in with the username/password you set in the Apps Script backend.
 3. In **Site link**, paste `https://USERNAME.github.io/wedding/`
    (it must end with a slash) and click **Save**.
 4. Add your guests. The generated links will now use your real address.
@@ -122,13 +196,12 @@ You need a free GitHub account: <https://github.com/signup>
    - **Edit / Delete** – change or remove the guest
 
 ### Publish the guest list
-Changes in the admin page are saved **in your browser only** until you publish them:
+Nothing to publish — changes save directly to the Google Sheet and the live
+invitation reads them immediately.
 
-1. Click **Download guests.json**.
-2. In your GitHub repository, open the `data` folder → `guests.json` → pencil **Edit**.
-3. Delete the old content, paste the downloaded content, and **Commit changes**.
-   (Or use **Add file → Upload files** and upload the new `guests.json`, replacing the old one.)
-4. Wait ~1 minute. The live site now greets each guest by name.
+The **Download backup JSON** button is optional: it gives you a copy of the
+list and can replace `data/guests.json` as an offline fallback. If you update
+that file, upload it to the `data` folder on GitHub as before.
 
 ### Test a guest link
 Open `https://USERNAME.github.io/wedding/?g=CODE` — you should see “Dear … ,”
@@ -163,32 +236,36 @@ You can also test without a code using `?to=Mr.%20%26%20Mrs.%20Silva`.
 | Couple names, date, venue, ceremony text | `index.html` |
 | Countdown date/time | `WEDDING_ISO` in `assets/app.js` (`2026-12-07T08:30:00+05:30`) |
 | Primary WhatsApp RSVP number | `RSVP_WHATSAPP` in `assets/app.js` |
-| Admin passcode | `ADMIN_PASSCODE` in `assets/admin.js` |
+| Admin username / password | Apps Script backend (`resetAdminCredentials`) or **Account** panel in admin |
+| API endpoint | `API_URL` in `assets/config.js` |
 | Colours / fonts | `:root` variables at the top of `assets/style.css` |
 | Google Maps location | Search `Tranquil Hotel` links in `index.html` |
-| Guest list | Admin page → Download → upload `data/guests.json` |
+| Guest list | Admin page (saved to Google Sheets) |
 | Intro video | Replace `Videos/invitation-intro.mp4` (H.264 MP4; portrait or landscape) |
 
 ---
 
 ## 7. Making changes after guests have the link
 
-Everything is plain HTML/CSS/JS. You can edit files directly on GitHub
+The website is plain HTML/CSS/JS. You can edit files directly on GitHub
 (pencil icon → edit → **Commit changes**) or re‑upload them. The site updates
 automatically in about a minute, and previously shared links keep working.
+
+Backend changes (`apps-script/Code.gs`) are different: paste the updated code in
+the Apps Script editor, then **Deploy → Manage deployments → Edit → New version**.
+The `/exec` URL stays the same, so `assets/config.js` does not need editing.
 
 ---
 
 ## 8. Important notes
 
-- **Privacy:** GitHub Pages is public. `data/guests.json` is technically readable
-  by anyone who knows the address. Only store display names — never phone numbers
-  or addresses for guests. (The phone field is optional and only used for sharing;
-  leave it blank if you prefer.)
-- **Admin passcode is not real security.** It is a convenience lock in the browser.
-  Anyone who guesses the URL can open the admin page; the passcode only hides the
-  interface. Since the guest list itself is public, this is fine for a wedding —
-  just don't put private data in `guests.json`.
+- **Privacy:** The Google Sheet is private to your Google account. The public API
+  only returns a guest's display name when the exact guest code is supplied — it
+  never exposes the full list or phone numbers. `data/guests.json` (optional
+  fallback) is publicly readable on GitHub Pages, so only put display names there.
+- **Admin login** is validated on the server by Apps Script. Passwords are stored
+  as salted SHA-256 hashes in Script Properties, never in the browser. Sessions
+  expire after 8 hours.
 - **Personalised links** use random suffixes by default, so they are hard to guess.
 - **Generic link:** the plain `https://USERNAME.github.io/wedding/` shows “Dear Guest,”
   — useful for a QR code or social media.
@@ -204,5 +281,5 @@ You are not locked in. The same files work on:
 - **Cloudflare Pages** — <https://pages.cloudflare.com> → connect the GitHub repo.
   Free `your-name.pages.dev` address.
 
-GitHub Pages is recommended here because the admin → download → upload workflow
-matches how the guest list is published.
+The guest list lives in Google Sheets, so the host only serves static files.
+Any of the hosts above works with the same `assets/config.js` API URL.
